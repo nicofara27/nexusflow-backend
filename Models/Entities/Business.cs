@@ -1,0 +1,11 @@
+﻿namespace NexusFlow.Models.Entities
+{
+    public class Business
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string address { get; set; } = string.Empty;
+        public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
