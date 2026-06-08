@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
 using NexusFlow.Models.Entities;
 
 namespace NexusFlow.Data
@@ -10,15 +11,21 @@ namespace NexusFlow.Data
         }
 
         public DbSet<User> Users => Set<User>();
-        public DbSet<Business> Businesses => Set<Business>();
+        public DbSet<Business> Business => Set<Business>();
         public DbSet<UserBusiness> UsersBusiness => Set<UserBusiness>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .Property(u => u.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
+
             modelBuilder.Entity<UserBusiness>(entity =>
             {
                 entity.Property(e => e.Id)
-                    .HasValueGenerator<Microsoft.EntityFrameworkCore.ValueGeneration.SequentialGuidValueGenerator>();
+                    .ValueGeneratedOnAdd()
+                    .HasValueGenerator<SequentialGuidValueGenerator>();
 
                 entity.HasIndex(ub => new { ub.UserId, ub.BusinessId })
                     .IsUnique();

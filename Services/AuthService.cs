@@ -58,6 +58,7 @@ namespace NexusFlow.Services
             var token = _jwtService.GenerateToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
 
+            user.RefreshToken = refreshToken;
             await _context.SaveChangesAsync();
 
             return new LoginResponse

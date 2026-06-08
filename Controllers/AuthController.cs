@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NexusFlow.Data;
 using NexusFlow.Models.DTOs;
-using NexusFlow.Models.Entities;
 using NexusFlow.Services;
 
 namespace NexusFlow.Controllers
@@ -19,7 +16,7 @@ namespace NexusFlow.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
+        public async Task<IActionResult> Register(RegisterRequest dto)
         {
             try
             {
@@ -44,7 +41,7 @@ namespace NexusFlow.Controllers
             }
         }
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
+        public async Task<IActionResult> Login(LoginRequest dto)
         {
             try
             {
