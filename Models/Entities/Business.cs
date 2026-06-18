@@ -7,5 +7,7 @@
         public string Address { get; set; } = string.Empty;
         public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public ICollection<Service> Services { get; set; } = [];
+
     }
 }
