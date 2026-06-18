@@ -44,6 +44,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<BusinessService>();
+builder.Services.AddScoped<AppointmentService>();
+builder.Services.AddScoped<ServicesService>();
 
 var app = builder.Build();
 

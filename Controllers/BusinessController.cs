@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NexusFlow.Models.DTOs;
-using NexusFlow.Models.Entities;
 using NexusFlow.Services;
 using System.Security.Claims;
 
@@ -36,8 +35,8 @@ namespace NexusFlow.Controllers
         }
 
         [Authorize]
-        [HttpGet()]
-        public async Task<ActionResult<Business>> GetBusiness()
+        [HttpGet]
+        public async Task<ActionResult<BusinessResponse>> GetBusiness()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null) return Unauthorized("Token inválido.");

@@ -13,6 +13,8 @@ namespace NexusFlow.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Business> Business => Set<Business>();
         public DbSet<UserBusiness> UsersBusiness => Set<UserBusiness>();
+        public DbSet<Service> Services => Set<Service>();
+        public DbSet<Appointment> Appointments => Set<Appointment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

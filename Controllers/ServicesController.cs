@@ -17,11 +17,11 @@ namespace NexusFlow.Controllers
             _servicesService = servicesService;
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateService(ServiceRequest dto)
+        public async Task<IActionResult> CreateService([FromBody] ServiceRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine(userIdClaim);
             if (userIdClaim == null) return Unauthorized("Token inválido.");
 
             var userId = Guid.Parse(userIdClaim);
@@ -41,7 +41,7 @@ namespace NexusFlow.Controllers
 
         [Authorize]
         [HttpPut("{serviceId}")]
-        public async Task<IActionResult> UpdateService(Guid serviceId, ServiceRequest dto)
+        public async Task<IActionResult> UpdateService(Guid serviceId, [FromBody] ServiceRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null) return Unauthorized("Token inválido.");
