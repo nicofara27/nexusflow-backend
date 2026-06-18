@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using NexusFlow.Models.DTOs;
 using NexusFlow.Services;
+using System.Security.Claims;
+
 
 namespace NexusFlow.Controllers
 {
@@ -18,55 +21,30 @@ namespace NexusFlow.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest dto)
         {
-            try
-            {
-                if (dto == null) return BadRequest(new { mensaje = "Los datos son requeridos" });
+            var user = await _authService.RegisterAsync(dto);
 
-                await _authService.RegisterAsync(dto);
-                return StatusCode(201, new { mensaje = "Usuario registrado correctamente " });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    mensaje = ex.Message
-                });
-            }
+            return CreatedAtAction(nameof(Register), new { id = user.Id }, user);
+
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest dto)
         {
-            try
-            {
-                if (dto == null) return BadRequest(new
-                {
-                    mensaje = "Los datos son requeridos"
-                });
+            var response = await _authService.LoginAsync(dto);
+            return Ok(response);
+        }
 
-                var response = await _authService.Login(dto);
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new
-                {
-                    mensaje = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new
-                {
-                    mensaje = ex.Message
-                });
-            }
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> RegisterEmployee(RegisterRequest dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null) return Unauthorized("Token inválido.");
+
+            var adminUserId = Guid.Parse(userIdClaim);
+
+            var employee = await _authService.RegisterEmployeeAsync(dto, adminUserId);
+
+            return CreatedAtAction(nameof(RegisterEmployee), new { id = employee.Id }, employee);
         }
     }
 }
