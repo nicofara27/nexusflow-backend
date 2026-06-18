@@ -21,7 +21,6 @@ namespace NexusFlow.Services
                 .FirstOrDefaultAsync(ub => ub.UserId == userID && ub.Role == BusinessRole.Admin);
             if (userBusiness == null) throw new Exception("No tienes permisos para crear servicios");
 
-            Console.WriteLine(dto.Description);
             var service = new Service
             {
                 Name = dto.Name,
@@ -81,7 +80,7 @@ namespace NexusFlow.Services
                 Name = service.Name,
                 Description = service.Description,
                 Price = service.Price,
-                Duration= service.Duration
+                Duration = service.Duration
             };
         }
     }
