@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NexusFlow.Models.DTOs;
-using NexusFlow.Models.Entities;
+using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Enums;
-using NexusFlow.Services;
+using NexusFlow.Services.Implementations;
+using NexusFlow.Services.Interfaces;
 using System.Security.Claims;
 
 namespace NexusFlow.Controllers
@@ -12,8 +12,8 @@ namespace NexusFlow.Controllers
     [Route("api/[controller]")]
     public class AppointmentController : ControllerBase
     {
-        private readonly AppointmentService _appointmentService;
-        public AppointmentController(AppointmentService appointmentService)
+        private readonly IAppointmentService _appointmentService;
+        public AppointmentController(IAppointmentService appointmentService)
         {
             _appointmentService = appointmentService;
         }
@@ -58,6 +58,16 @@ namespace NexusFlow.Controllers
             var appointments = await _appointmentService.GetAppointmentsAsync(userId, employeeId);
 
             return Ok(appointments);
+        }
+
+        [HttpGet("{userBusinessId}/availability")]
+        public async Task<IActionResult> GetEmployeeAvailabilityAsync(
+            Guid userBusinessId,
+            [FromQuery] Guid serviceId,
+            [FromQuery] DateOnly date)
+        {
+            var avilableTurns = await _appointmentService.GetEmployeeAvailabilityAsync(userBusinessId, serviceId, date);
+            return Ok(avilableTurns);
         }
     }
 }

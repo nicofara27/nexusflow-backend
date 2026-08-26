@@ -8,6 +8,5 @@
         public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<Service> Services { get; set; } = [];
-
     }
 }

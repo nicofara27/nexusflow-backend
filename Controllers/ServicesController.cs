@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using NexusFlow.Models.DTOs;
-using NexusFlow.Services;
+using NexusFlow.Models.DTOs.Service;
+using NexusFlow.Services.Interfaces;
 using System.Security.Claims;
 
 namespace NexusFlow.Controllers
@@ -11,8 +10,8 @@ namespace NexusFlow.Controllers
     [Route("/api/[controller]")]
     public class ServicesController : ControllerBase
     {
-        private readonly ServicesService _servicesService;
-        public ServicesController(ServicesService servicesService)
+        private readonly IServicesService _servicesService;
+        public ServicesController(IServicesService servicesService)
         {
             _servicesService = servicesService;
         }
@@ -28,20 +27,30 @@ namespace NexusFlow.Controllers
 
             var service = await _servicesService.CreateServiceAsync(dto, userId);
 
-            return Ok(service);
+
+            return Ok(new ServiceResponse
+            {
+
+            });
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetServices([FromQuery] Guid businessId)
+        [HttpGet("{serviceId}")]
+        [Authorize]
+        public async Task<IActionResult> GetService(Guid serviceId)
         {
-            var services = await _servicesService.GetServicesAsync(businessId);
-            return Ok(services);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null) return Unauthorized("Token inválido.");
+
+            var userId = Guid.Parse(userIdClaim);
+
+            var service = await _servicesService.GetServiceAsync(serviceId, userId);
+
+            return Ok(service);
         }
 
         [Authorize]
         [HttpPut("{serviceId}")]
-        public async Task<IActionResult> UpdateService(Guid serviceId, [FromBody] ServiceRequest dto)
+        public async Task<IActionResult> UpdateService(Guid serviceId, [FromBody] UpdateServiceRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null) return Unauthorized("Token inválido.");

@@ -8,6 +8,8 @@
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
+        public bool IsSuperAdmin { get; set; } = false;
         public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
         public ICollection<Appointment> Appointments { get; set; } = [];
     }

@@ -93,9 +93,6 @@ namespace NexusFlow.Migrations
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("EmployeeId")
-                        .HasColumnType("char(36)");
-
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time(6)");
 
@@ -105,11 +102,14 @@ namespace NexusFlow.Migrations
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time(6)");
 
+                    b.Property<Guid>("UserBusinessId")
+                        .HasColumnType("char(36)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("UserBusinessId");
 
-                    b.ToTable("EmployeeSchedule");
+                    b.ToTable("EmployeeSchedules");
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.Service", b =>
@@ -127,6 +127,9 @@ namespace NexusFlow.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -139,6 +142,27 @@ namespace NexusFlow.Migrations
                     b.HasIndex("BusinessId");
 
                     b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("NexusFlow.Models.Entities.ServiceAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("UserBusinessId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("UserBusinessId");
+
+                    b.ToTable("ServiceAssignment");
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.User", b =>
@@ -155,6 +179,9 @@ namespace NexusFlow.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -165,6 +192,9 @@ namespace NexusFlow.Migrations
 
                     b.Property<string>("RefreshToken")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("RefreshTokenExpiry")
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -179,6 +209,9 @@ namespace NexusFlow.Migrations
 
                     b.Property<Guid>("BusinessId")
                         .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -234,13 +267,13 @@ namespace NexusFlow.Migrations
 
             modelBuilder.Entity("NexusFlow.Models.Entities.EmployeeSchedule", b =>
                 {
-                    b.HasOne("NexusFlow.Models.Entities.UserBusiness", "Employee")
+                    b.HasOne("NexusFlow.Models.Entities.UserBusiness", "UserBusiness")
                         .WithMany("Schedules")
-                        .HasForeignKey("EmployeeId")
+                        .HasForeignKey("UserBusinessId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Employee");
+                    b.Navigation("UserBusiness");
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.Service", b =>
@@ -252,6 +285,25 @@ namespace NexusFlow.Migrations
                         .IsRequired();
 
                     b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("NexusFlow.Models.Entities.ServiceAssignment", b =>
+                {
+                    b.HasOne("NexusFlow.Models.Entities.Service", "Service")
+                        .WithMany("ServiceAssignment")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NexusFlow.Models.Entities.UserBusiness", "UserBusiness")
+                        .WithMany("ServiceAssignment")
+                        .HasForeignKey("UserBusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+
+                    b.Navigation("UserBusiness");
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.UserBusiness", b =>
@@ -283,6 +335,8 @@ namespace NexusFlow.Migrations
             modelBuilder.Entity("NexusFlow.Models.Entities.Service", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("ServiceAssignment");
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.User", b =>
@@ -297,6 +351,8 @@ namespace NexusFlow.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("Schedules");
+
+                    b.Navigation("ServiceAssignment");
                 });
 #pragma warning restore 612, 618
         }

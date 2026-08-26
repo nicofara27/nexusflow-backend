@@ -2,6 +2,7 @@
 {
     public enum BusinessRole
     {
+        SuperAdmin,
         Admin,
         Employee
     }

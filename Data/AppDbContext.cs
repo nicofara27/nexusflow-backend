@@ -15,6 +15,8 @@ namespace NexusFlow.Data
         public DbSet<UserBusiness> UsersBusiness => Set<UserBusiness>();
         public DbSet<Service> Services => Set<Service>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
+        public DbSet<EmployeeSchedule> EmployeeSchedules => Set<EmployeeSchedule>();
+        public DbSet<ServiceAssignment> ServiceAssignment => Set<ServiceAssignment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,9 +25,14 @@ namespace NexusFlow.Data
                 .ValueGeneratedOnAdd()
                 .HasValueGenerator<SequentialGuidValueGenerator>();
 
+            modelBuilder.Entity<Business>()
+                .Property(b => b.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
+
             modelBuilder.Entity<UserBusiness>(entity =>
             {
-                entity.Property(e => e.Id)
+                entity.Property(ub => ub.Id)
                     .ValueGeneratedOnAdd()
                     .HasValueGenerator<SequentialGuidValueGenerator>();
 
@@ -34,6 +41,26 @@ namespace NexusFlow.Data
                 entity.Property(e => e.Role)
                     .HasConversion<string>();
             });
+
+            modelBuilder.Entity<Service>()
+                .Property(s => s.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
+
+            modelBuilder.Entity<Appointment>()
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
+
+            modelBuilder.Entity<EmployeeSchedule>()
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
+
+            modelBuilder.Entity<ServiceAssignment>()
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd()
+                .HasValueGenerator<SequentialGuidValueGenerator>();
 
             base.OnModelCreating(modelBuilder);
         }

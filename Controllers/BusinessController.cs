@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NexusFlow.Models.DTOs;
-using NexusFlow.Services;
+using NexusFlow.Models.DTOs.Business;
+using NexusFlow.Services.Implementations;
+using NexusFlow.Services.Interfaces;
 using System.Security.Claims;
 
 namespace NexusFlow.Controllers
@@ -10,10 +11,12 @@ namespace NexusFlow.Controllers
     [Route("api/[controller]")]
     public class BusinessController : ControllerBase
     {
-        private readonly BusinessService _businessService;
-        public BusinessController(BusinessService businessService)
+        private readonly IBusinessService _businessService;
+        private readonly IServicesService _servicesService;
+        public BusinessController(IBusinessService businessService,IServicesService servicesService)
         {
             _businessService = businessService;
+            _servicesService = servicesService;
         }
 
         [Authorize]
@@ -29,6 +32,7 @@ namespace NexusFlow.Controllers
 
             return Ok(new BusinessResponse
             {
+                Id = business.Id,
                 Name = business.Name,
                 Address = business.Address
             });
@@ -49,7 +53,6 @@ namespace NexusFlow.Controllers
 
             return Ok(new BusinessResponse
             {
-                Id = business.Id,
                 Name = business.Name,
                 Address = business.Address,
             });
@@ -69,10 +72,17 @@ namespace NexusFlow.Controllers
 
             return Ok(new BusinessResponse
             {
-                Id = businessId,
                 Name = business.Name,
                 Address = business.Address
             });
+        }
+
+        [HttpGet("{businessId}/services")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetServices(Guid businessId)
+        {
+            var services = await _servicesService.GetServicesByBusinessIdAsync(businessId);
+            return Ok(services);
         }
     }
 }
