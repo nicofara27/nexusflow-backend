@@ -17,16 +17,16 @@ namespace NexusFlow.Data
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<EmployeeSchedule> EmployeeSchedules => Set<EmployeeSchedule>();
         public DbSet<ServiceAssignment> ServiceAssignment => Set<ServiceAssignment>();
+        public DbSet<BusinessCategory> BusinessCategories => Set<BusinessCategory>();
+        public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+                modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
             modelBuilder.Entity<User>()
                 .Property(u => u.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            modelBuilder.Entity<Business>()
-                .Property(b => b.Id)
                 .ValueGeneratedOnAdd()
                 .HasValueGenerator<SequentialGuidValueGenerator>();
 

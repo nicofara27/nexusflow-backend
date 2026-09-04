@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusFlow.Data;
 
@@ -11,9 +12,11 @@ using NexusFlow.Data;
 namespace NexusFlow.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904125939_AddBusinessAndServiceCategories")]
+    partial class AddBusinessAndServiceCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,32 +132,6 @@ namespace NexusFlow.Migrations
                         .IsUnique();
 
                     b.ToTable("BusinessCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("123e4567-e89b-12d3-a456-426614174000"),
-                            Name = "Barbería",
-                            Slug = "barberia"
-                        },
-                        new
-                        {
-                            Id = new Guid("6ec0bd7f-11c0-43da-975e-2a8ad9ebae0b"),
-                            Name = "Peluquería",
-                            Slug = "peluqueria"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"),
-                            Name = "Salón de uñas",
-                            Slug = "salon-de-unas"
-                        },
-                        new
-                        {
-                            Id = new Guid("f81d4fae-7dec-11d0-a765-00a0c91e6bf6"),
-                            Name = "Estética",
-                            Slug = "estetica"
-                        });
                 });
 
             modelBuilder.Entity("NexusFlow.Models.Entities.EmployeeSchedule", b =>

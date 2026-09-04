@@ -42,7 +42,8 @@ namespace NexusFlow.Repositories.Implementations
                     Name = s.Name,
                     Description = s.Description,
                     Price = s.Price,
-                    Duration = s.Duration
+                    Duration = s.Duration,
+                    ServiceCategoryId = s.ServiceCategoryId
                 })
                 .ToListAsync();
         }

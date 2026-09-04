@@ -10,6 +10,8 @@
         public bool IsActive { get; set; } = true;
         public Guid BusinessId { get; set; }
         public Business Business { get; set; } = null!;
+        public Guid? ServiceCategoryId { get; set; }
+        public ServiceCategory? ServiceCategory { get; set; }
         public ICollection<Appointment> Appointments { get; set; } = [];
         public ICollection<ServiceAssignment> ServiceAssignment { get; set; } = [];
     }
