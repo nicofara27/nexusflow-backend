@@ -63,7 +63,7 @@ namespace NexusFlow.Services.Implementations
             await _unitOfWork.SaveChangesAsync();
 
 
-            return MapToResponse(business);
+            return MapToResponse(business, category.Name);
 
         }
 
@@ -73,14 +73,9 @@ namespace NexusFlow.Services.Implementations
 
             if (userBusiness == null) throw new Exception("Negocio no encontrado.");
 
-            return MapToResponse(userBusiness.Business);
+            return MapToResponse(userBusiness.Business, userBusiness.Business.BusinessCategory.Name);
 
         }
-
-        //public async Task<BusinessResponse> GetBusinessAdminAsync(business)
-        //{
-
-        //}
 
         public async Task<BusinessResponse> UpdateBusinessAsync(Guid userId, BusinessRequest dto)
         {
@@ -105,10 +100,10 @@ namespace NexusFlow.Services.Implementations
 
             await _unitOfWork.SaveChangesAsync();
 
-            return MapToResponse(business);
+            return MapToResponse(business, category.Name);
         }
 
-        private static BusinessResponse MapToResponse(Business business)
+        private static BusinessResponse MapToResponse(Business business, string businessCategoryName)
         {
             return new BusinessResponse
             {
@@ -120,7 +115,7 @@ namespace NexusFlow.Services.Implementations
                 Longitude = business.Longitude,
                 AccentColor = business.AccentColor,
                 BusinessCategoryId = business.BusinessCategoryId,
-                BusinessCategoryName = business.BusinessCategory.Name
+                BusinessCategoryName = businessCategoryName
             };
         }
     }

@@ -49,7 +49,10 @@ namespace NexusFlow.Services.Implementations
 
         public async Task<List<ServiceResponse>> GetServicesByBusinessIdAsync(Guid businessId)
         {
-            return await _serviceRepository.GetByBusinessIdAsync(businessId); ;
+            var services = await _serviceRepository
+                .GetByBusinessIdAsync(businessId);
+
+            return services.Select(MapToResponse).ToList();
         }
         public async Task<ServiceResponse> GetServiceAsync(Guid serviceId, Guid userId)
         {

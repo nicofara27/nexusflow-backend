@@ -64,6 +64,7 @@ namespace NexusFlow.Repositories.Implementations
         {
             return await _context.UsersBusiness
                 .Include(ub => ub.Business)
+                    .ThenInclude(b => b.BusinessCategory)
                 .FirstOrDefaultAsync(ub => ub.UserId == userId);
         }
 

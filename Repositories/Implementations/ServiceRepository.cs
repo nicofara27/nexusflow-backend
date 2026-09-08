@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NexusFlow.Data;
-using NexusFlow.Models.DTOs.Service;
 using NexusFlow.Models.Entities;
 using NexusFlow.Repositories.Interfaces;
 
@@ -32,19 +31,10 @@ namespace NexusFlow.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<ServiceResponse>> GetByBusinessIdAsync(Guid businessId)
+        public async Task<List<Service>> GetByBusinessIdAsync(Guid businessId)
         {
             return await _context.Services
                 .Where(s => s.BusinessId == businessId)
-                .Select(s => new ServiceResponse
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Description = s.Description,
-                    Price = s.Price,
-                    Duration = s.Duration,
-                    ServiceCategoryId = s.ServiceCategoryId
-                })
                 .ToListAsync();
         }
         public async Task<Service?> GetByIdAndBusinessAsync(Guid serviceId, Guid businessId)
