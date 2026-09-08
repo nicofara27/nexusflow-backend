@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using NexusFlow.Models.Entities;
 
-namespace NexusFlow.Data
+namespace NexusFlow.Data.Configuration
 {
     public class ServiceCategoryConfiguration : IEntityTypeConfiguration<ServiceCategory>
     {
