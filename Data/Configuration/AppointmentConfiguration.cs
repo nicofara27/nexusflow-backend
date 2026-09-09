@@ -12,6 +12,22 @@ namespace NexusFlow.Data.Configurations
             builder.Property(a => a.Id)
                 .ValueGeneratedOnAdd()
                 .HasValueGenerator<SequentialGuidValueGenerator>();
+
+            builder.Property(a => a.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            builder.HasIndex(a => new
+            {
+                a.EmployeeId,
+                a.StartDate
+            });
+
+            builder.HasIndex(a => new
+            {
+                a.BusinessId,
+                a.StartDate
+            });
         }
     }
 }

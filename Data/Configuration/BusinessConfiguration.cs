@@ -12,7 +12,6 @@ namespace NexusFlow.Data.Configuration
             builder.Property(b => b.Id)
                 .ValueGeneratedOnAdd()
                 .HasValueGenerator<SequentialGuidValueGenerator>();
-            builder.HasKey(b => b.Id);
             builder.Property(b => b.Name)
                 .IsRequired()
                 .HasMaxLength(100);

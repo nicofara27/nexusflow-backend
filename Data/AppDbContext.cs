@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ValueGeneration;
 using NexusFlow.Models.Entities;
 
 namespace NexusFlow.Data
@@ -23,46 +22,8 @@ namespace NexusFlow.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-                modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-            modelBuilder.Entity<User>()
-                .Property(u => u.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            modelBuilder.Entity<UserBusiness>(entity =>
-            {
-                entity.Property(ub => ub.Id)
-                    .ValueGeneratedOnAdd()
-                    .HasValueGenerator<SequentialGuidValueGenerator>();
-
-                entity.HasIndex(ub => new { ub.UserId, ub.BusinessId })
-                    .IsUnique();
-                entity.Property(e => e.Role)
-                    .HasConversion<string>();
-            });
-
-            modelBuilder.Entity<Service>()
-                .Property(s => s.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            modelBuilder.Entity<Appointment>()
-                .Property(a => a.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            modelBuilder.Entity<EmployeeSchedule>()
-                .Property(a => a.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            modelBuilder.Entity<ServiceAssignment>()
-                .Property(a => a.Id)
-                .ValueGeneratedOnAdd()
-                .HasValueGenerator<SequentialGuidValueGenerator>();
-
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
     }
 }

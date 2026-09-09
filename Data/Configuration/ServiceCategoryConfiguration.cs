@@ -17,6 +17,7 @@ namespace NexusFlow.Data.Configuration
                 .HasMaxLength(100);
             builder.HasIndex(sc => new { sc.BusinessId, sc.Name })
                  .IsUnique();
+            builder.HasIndex(sc => new { sc.BusinessId, sc.Order });
             builder.HasOne(sc => sc.Business)
                 .WithMany(b => b.ServiceCategories)
                 .HasForeignKey(sc => sc.BusinessId)
