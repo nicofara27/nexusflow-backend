@@ -15,5 +15,6 @@
         public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
         public ICollection<Service> Services { get; set; } = [];
         public ICollection<ServiceCategory> ServiceCategories { get; set; } = [];
+        public ICollection<BusinessSchedule> Schedules { get; set; } = [];
     }
 }

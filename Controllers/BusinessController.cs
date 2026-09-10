@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NexusFlow.Models.DTOs.Business;
+using NexusFlow.Models.DTOs.BusinessSchedule;
 using NexusFlow.Services.Implementations;
 using NexusFlow.Services.Interfaces;
 using System.Security.Claims;
@@ -13,10 +14,12 @@ namespace NexusFlow.Controllers
     {
         private readonly IBusinessService _businessService;
         private readonly IServicesService _servicesService;
-        public BusinessController(IBusinessService businessService,IServicesService servicesService)
+        private readonly IBusinessScheduleService _businessScheduleService;
+        public BusinessController(IBusinessService businessService,IServicesService servicesService, IBusinessScheduleService businessScheduleService)
         {
             _businessService = businessService;
             _servicesService = servicesService;
+            _businessScheduleService = businessScheduleService;
         }
 
         [Authorize]
@@ -83,6 +86,26 @@ namespace NexusFlow.Controllers
         {
             var services = await _servicesService.GetServicesByBusinessIdAsync(businessId);
             return Ok(services);
+        }
+
+        [HttpGet("schedule")]
+        public async Task<ActionResult<List<BusinessScheduleResponse>>> GetSchedule()
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var schedule = await _businessScheduleService.GetAsync(userId);
+
+            return Ok(schedule);
+        }
+
+        [HttpPut("schedule")]
+        public async Task<ActionResult<List<BusinessScheduleResponse>>> UpdateSchedule(BusinessScheduleRequest request)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var schedule = await _businessScheduleService.UpdateAsync(userId, request);
+
+            return Ok(schedule);
         }
     }
 }
