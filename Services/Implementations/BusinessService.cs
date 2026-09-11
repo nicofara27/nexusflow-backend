@@ -1,4 +1,6 @@
 ﻿using NexusFlow.Models.DTOs.Business;
+using NexusFlow.Models.DTOs.BusinessSchedule;
+using NexusFlow.Models.DTOs.Service;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -103,6 +105,23 @@ namespace NexusFlow.Services.Implementations
             return MapToResponse(business, category.Name);
         }
 
+        public async Task<List<BusinessPublicResponse>> GetAllPublicAsync()
+        {
+            var businesses = await _businessRepository.GetPublicBusinessesAsync();
+
+            return businesses
+            .Select(MapToPublicResponse)
+            .ToList();
+        }
+
+        public async Task<BusinessPublicDetailsResponse> GetPublicByIdAsync(Guid businessId)
+        {
+            var business = await _businessRepository.GetPublicBusinessByIdAsync(businessId);
+            if(business == null) throw new Exception("Negocio no encontrado.");
+
+            return MapToPublicDetailsResponse(business);
+        }
+
         private static BusinessResponse MapToResponse(Business business, string businessCategoryName)
         {
             return new BusinessResponse
@@ -117,6 +136,118 @@ namespace NexusFlow.Services.Implementations
                 BusinessCategoryId = business.BusinessCategoryId,
                 BusinessCategoryName = businessCategoryName
             };
+        }
+
+        private static BusinessPublicResponse MapToPublicResponse(Business business)
+        {
+            return new BusinessPublicResponse
+            {
+                Id = business.Id,
+                Name = business.Name,
+                Address = business.Address,
+                BusinessCategoryId = business.BusinessCategoryId,
+                BusinessCategoryName = business.BusinessCategory.Name,
+                BusinessCategorySlug = business.BusinessCategory.Slug,
+                MainImageUrl = business.Images
+                    .OrderBy(image => image.Order)
+                    .Select(image => image.StorageKey)
+                    .FirstOrDefault()
+            };
+        }
+
+        private static BusinessPublicDetailsResponse MapToPublicDetailsResponse(
+            Business business)
+        {
+            var usesServiceCategories = business.ServiceCategories.Any();
+
+            return new BusinessPublicDetailsResponse
+            {
+                Id = business.Id,
+                Name = business.Name,
+                Address = business.Address,
+                About = business.About,
+                Latitude = business.Latitude,
+                Longitude = business.Longitude,
+                AccentColor = business.AccentColor,
+                BusinessCategoryId = business.BusinessCategoryId,
+                BusinessCategoryName = business.BusinessCategory.Name,
+                BusinessCategorySlug = business.BusinessCategory.Slug,
+
+                Images = business.Images
+                    .OrderBy(image => image.Order)
+                    .Select(image => new BusinessImagePublicResponse
+                    {
+                        Id = image.Id,
+                        Url = image.StorageKey,
+                        Order = image.Order
+                    })
+                    .ToList(),
+
+                Schedules = business.Schedules
+                    .OrderBy(schedule => GetDayOrder(schedule.DayOfWeek))
+                    .Select(schedule => new BusinessScheduleResponse
+                    {
+                        DayOfWeek = schedule.DayOfWeek,
+                        StartTime = schedule.StartTime,
+                        EndTime = schedule.EndTime
+                    })
+                    .ToList(),
+
+                ServiceCategories = usesServiceCategories
+                    ? business.ServiceCategories
+                        .OrderBy(category => category.Order)
+                        .Select(category => new ServiceCategoryPublicResponse
+                        {
+                            Id = category.Id,
+                            Name = category.Name,
+                            Order = category.Order,
+                            Services = business.Services
+                                .Where(service =>
+                                    service.IsActive &&
+                                    service.ServiceCategoryId == category.Id)
+                                .Select(MapServiceToResponse)
+                                .ToList()
+                        })
+                        .ToList()
+                    : [],
+
+                Services = !usesServiceCategories
+                    ? business.Services
+                        .Where(service => service.IsActive)
+                        .Select(MapServiceToResponse)
+                        .ToList()
+                    : [],
+
+                Employees = business.UserBusinesses
+                    .Where(userBusiness =>
+                        userBusiness.Role == BusinessRole.Employee &&
+                        userBusiness.IsActive)
+                    .Select(userBusiness => new EmployeePublicResponse
+                    {
+                        Id = userBusiness.Id,
+                        FirstName = userBusiness.User.FirstName,
+                        LastName = userBusiness.User.LastName
+                    })
+                    .ToList()
+            };
+        }
+
+        private static ServiceResponse MapServiceToResponse(Service service)
+        {
+            return new ServiceResponse
+            {
+                Id = service.Id,
+                Name = service.Name,
+                Description = service.Description,
+                Price = service.Price,
+                Duration = service.Duration,
+                ServiceCategoryId = service.ServiceCategoryId
+            };
+        }
+
+        private static int GetDayOrder(DayOfWeek day)
+        {
+            return day == DayOfWeek.Sunday ? 7 : (int)day;
         }
     }
 }

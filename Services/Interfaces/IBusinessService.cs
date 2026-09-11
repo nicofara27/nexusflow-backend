@@ -7,5 +7,8 @@ namespace NexusFlow.Services.Interfaces
         Task<BusinessResponse> CreateBusinessAsync(BusinessRequest dto, Guid userId);
         Task<BusinessResponse> GetBusinessAsync(Guid userId);
         Task<BusinessResponse> UpdateBusinessAsync(Guid userId, BusinessRequest dto);
+        Task<List<BusinessPublicResponse>> GetAllPublicAsync();
+        Task<BusinessPublicDetailsResponse> GetPublicByIdAsync(Guid businessId);
+
     }
 }

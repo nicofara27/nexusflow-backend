@@ -12,9 +12,10 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Guid BusinessCategoryId { get; set; }
         public BusinessCategory BusinessCategory { get; set; } = null!;
-        public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
+        public ICollection<BusinessImage> Images { get; set; } = [];
+        public ICollection<BusinessSchedule> Schedules { get; set; } = [];
         public ICollection<Service> Services { get; set; } = [];
         public ICollection<ServiceCategory> ServiceCategories { get; set; } = [];
-        public ICollection<BusinessSchedule> Schedules { get; set; } = [];
+        public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
     }
 }
