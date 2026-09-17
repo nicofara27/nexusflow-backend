@@ -14,6 +14,7 @@
         public BusinessCategory BusinessCategory { get; set; } = null!;
         public ICollection<BusinessImage> Images { get; set; } = [];
         public ICollection<BusinessSchedule> Schedules { get; set; } = [];
+        public ICollection<Review> Reviews { get; set; } = [];
         public ICollection<Service> Services { get; set; } = [];
         public ICollection<ServiceCategory> ServiceCategories { get; set; } = [];
         public ICollection<UserBusiness> UserBusinesses { get; set; } = [];

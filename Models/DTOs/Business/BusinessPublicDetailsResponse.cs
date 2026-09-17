@@ -15,6 +15,9 @@ namespace NexusFlow.Models.DTOs.Business
         public Guid BusinessCategoryId { get; set; }
         public string BusinessCategoryName { get; set; } = string.Empty;
         public string BusinessCategorySlug { get; set; } = string.Empty;
+        public double AverageRating { get; set; }
+        public int TotalReviews { get; set; }
+        public List<ReviewResponse> Reviews { get; set; } = [];
         public List<BusinessImagePublicResponse> Images { get; set; } = [];
         public List<BusinessScheduleResponse> Schedules { get; set; } = [];
         public List<ServiceCategoryPublicResponse> ServiceCategories { get; set; } = [];

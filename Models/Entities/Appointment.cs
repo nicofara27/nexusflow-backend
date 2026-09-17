@@ -13,6 +13,7 @@ namespace NexusFlow.Models.Entities
         public Service Service { get; set; } = null!;
         public Guid BusinessId { get; set; }
         public Business Business { get; set; } = null!;
+        public Review? Review { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;

@@ -15,6 +15,7 @@ namespace NexusFlow.Data
         public DbSet<BusinessImage> BusinessImages => Set<BusinessImage>();
         public DbSet<BusinessSchedule> BusinessSchedules => Set<BusinessSchedule>();
         public DbSet<EmployeeSchedule> EmployeeSchedules => Set<EmployeeSchedule>();
+        public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Service> Services => Set<Service>();
         public DbSet<ServiceAssignment> ServiceAssignment => Set<ServiceAssignment>();
         public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();

@@ -159,6 +159,17 @@ namespace NexusFlow.Services.Implementations
             Business business)
         {
             var usesServiceCategories = business.ServiceCategories.Any();
+            var reviews = business.Reviews
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new ReviewResponse
+                {
+                    Id = r.Id,
+                    Author = $"{r.Appointment.Client.FirstName} {r.Appointment.Client.LastName}",
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt
+                })
+                .ToList();
 
             return new BusinessPublicDetailsResponse
             {
@@ -172,6 +183,12 @@ namespace NexusFlow.Services.Implementations
                 BusinessCategoryId = business.BusinessCategoryId,
                 BusinessCategoryName = business.BusinessCategory.Name,
                 BusinessCategorySlug = business.BusinessCategory.Slug,
+
+                AverageRating = reviews.Count > 0
+                    ? reviews.Average(r => r.Rating)
+                    : 0,
+                TotalReviews = reviews.Count,
+                Reviews = reviews,
 
                 Images = business.Images
                     .OrderBy(image => image.Order)

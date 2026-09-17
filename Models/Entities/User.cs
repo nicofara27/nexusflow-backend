@@ -10,7 +10,7 @@
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiry { get; set; }
         public bool IsSuperAdmin { get; set; } = false;
-        public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
         public ICollection<Appointment> Appointments { get; set; } = [];
+        public ICollection<UserBusiness> UserBusinesses { get; set; } = [];
     }
 }
