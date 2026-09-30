@@ -1,8 +1,6 @@
-﻿using NexusFlow.Helpers;
-using NexusFlow.Models.DTOs.Appointment;
+﻿using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
-using NexusFlow.Repositories.Implementations;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
 
@@ -157,17 +155,15 @@ namespace NexusFlow.Services.Implementations
             var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
             if (service == null || !service.IsActive) throw new Exception("Servicio no encontrado.");
 
-            ValidateEmployeeServiceAndSchedule(employee, service, date.DayOfWeek);
+            if (!employee.ServiceAssignment.Any(sa => sa.ServiceId == service.Id)) throw new Exception("El empleado no realiza este servicio.");
+
+            var schedule = employee.Schedules.FirstOrDefault(s =>s.DayOfWeek == date.DayOfWeek && s.IsActive);
+            if (schedule == null) return [];
 
             var appointments = await _appointmentRepository.GetByUserBusinessIdAndDate(userBusinessId, date);
 
-            var allServices = await _serviceRepository.GetByBusinessIdAsync(employee.BusinessId);
-            var durations = allServices.Select(s => s.Duration).Distinct().ToList();
-            var slotInterval = TimeSpan.FromMinutes(ScheduleHelper.CalculateGcd(durations));
+            var slotInterval = TimeSpan.FromMinutes(10);
             var serviceDuration = TimeSpan.FromMinutes(service.Duration);
-
-            var schedule = employee.Schedules
-                .FirstOrDefault(s => s.DayOfWeek == date.DayOfWeek && s.IsActive);
 
             return GenerateAvailability(date, schedule!, appointments, serviceDuration, slotInterval);
         }
