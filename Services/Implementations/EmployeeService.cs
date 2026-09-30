@@ -2,31 +2,25 @@
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
-using NexusFlow.Helpers;
 using NexusFlow.Models.DTOs.Employee;
 
 namespace NexusFlow.Services.Implementations
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IBusinessRepository _businessRepository;
         private readonly IUserBusinessRepository _userBusinessRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IServiceRepository _serviceRepository;
         private readonly IServiceAssignmentRepository _serviceAssignmentRepository;
         private readonly IUnitOfWork _unitOfWork;
         public EmployeeService(
-            IAppointmentRepository appointmentRepository,
-            IBusinessRepository businessRepository,
             IUserBusinessRepository userBusinessRepository,
             IEmployeeRepository employeeRepository,
             IServiceRepository serviceRepository,
             IServiceAssignmentRepository serviceAssignmentRepository,
             IUnitOfWork unitOfWork)
         {
-            _appointmentRepository = appointmentRepository;
-            _businessRepository = businessRepository;
+            
             _userBusinessRepository = userBusinessRepository;
             _employeeRepository = employeeRepository;
             _serviceRepository = serviceRepository;

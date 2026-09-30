@@ -8,6 +8,6 @@ namespace NexusFlow.Repositories.Interfaces
         void Add(Business business);
         Task<Business?> GetByIdAsync(Guid businessId);
         Task<List<Business>> GetPublicBusinessesAsync();
-        Task<Business?> GetPublicBusinessByIdAsync(Guid businessId);
+        Task<Business?> GetPublicByIdAsync(Guid businessId);
     }
 }

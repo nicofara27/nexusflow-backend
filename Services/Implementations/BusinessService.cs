@@ -1,5 +1,6 @@
 ﻿using NexusFlow.Models.DTOs.Business;
 using NexusFlow.Models.DTOs.BusinessSchedule;
+using NexusFlow.Models.DTOs.Employee;
 using NexusFlow.Models.DTOs.Service;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
@@ -16,7 +17,7 @@ namespace NexusFlow.Services.Implementations
         private readonly IUserBusinessRepository _userBusinessRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public BusinessService(IBusinessRepository businessRepository, 
+        public BusinessService(IBusinessRepository businessRepository,
             IBusinessCategoryRepository businessCategoryRepository,
             IUserRepository userRepository,
             IUserBusinessRepository userBusinessRepository,
@@ -116,8 +117,8 @@ namespace NexusFlow.Services.Implementations
 
         public async Task<BusinessPublicDetailsResponse> GetPublicByIdAsync(Guid businessId)
         {
-            var business = await _businessRepository.GetPublicBusinessByIdAsync(businessId);
-            if(business == null) throw new Exception("Negocio no encontrado.");
+            var business = await _businessRepository.GetPublicByIdAsync(businessId);
+            if (business == null) throw new Exception("Negocio no encontrado.");
 
             return MapToPublicDetailsResponse(business);
         }
@@ -236,18 +237,27 @@ namespace NexusFlow.Services.Implementations
                     : [],
 
                 Employees = business.UserBusinesses
-                    .Where(userBusiness =>
-                        userBusiness.Role == BusinessRole.Employee &&
-                        userBusiness.IsActive)
-                    .Select(userBusiness => new EmployeePublicResponse
+                    .Where(ub =>
+                        ub.Role == BusinessRole.Employee &&
+                        ub.IsActive)
+                    .Select(ub => new EmployeePublicResponse
                     {
-                        Id = userBusiness.Id,
-                        FirstName = userBusiness.User.FirstName,
-                        LastName = userBusiness.User.LastName
+                        Id = ub.Id,
+                        FirstName = ub.User.FirstName,
+                        LastName = ub.User.LastName,
+                        PortfolioImages = ub.PortfolioImages
+                    .OrderBy(i => i.Order)
+                    .Select(i => new EmployeePortfolioImagePublicResponse
+                        {
+                            Id = i.Id,
+                            Url = i.StorageKey,
+                            Order = i.Order
+                        })
+                        .ToList()
                     })
-                    .ToList()
-            };
-        }
+                    .ToList(),
+                        };
+                    }
 
         private static ServiceResponse MapServiceToResponse(Service service)
         {

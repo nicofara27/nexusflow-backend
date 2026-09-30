@@ -14,5 +14,6 @@ namespace NexusFlow.Models.Entities
         public ICollection<EmployeeSchedule> Schedules { get; set; } = [];
         public ICollection<Appointment> Appointments { get; set; } = [];
         public ICollection<ServiceAssignment> ServiceAssignment { get; set; } = [];
+        public ICollection<EmployeePortfolioImage> PortfolioImages { get; set; } = [];
     }
 }

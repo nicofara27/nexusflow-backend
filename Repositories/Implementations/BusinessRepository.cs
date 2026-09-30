@@ -33,7 +33,7 @@ namespace NexusFlow.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<Business?> GetPublicBusinessByIdAsync(Guid businessId)
+        public async Task<Business?> GetPublicByIdAsync(Guid businessId)
         {
             return await _context.Business
                 .AsNoTracking()
@@ -47,6 +47,8 @@ namespace NexusFlow.Repositories.Implementations
                     .ThenInclude(a => a.Client)
                 .Include(b => b.UserBusinesses)
                     .ThenInclude(ub => ub.User)
+                .Include(b => b.UserBusinesses)
+                    .ThenInclude(ub => ub.PortfolioImages)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(b => b.Id == businessId);
         }
