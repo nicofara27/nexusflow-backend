@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.Appointment;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -31,10 +32,10 @@ namespace NexusFlow.Services.Implementations
         public async Task<AppointmentResponse> CreateAppointmentAsync(Guid clientId, AppointmentRequest dto)
         {
             var employee = await _userBusinessRepository.GetEmployeeByIdWithDetailsAsync(dto.EmployeeId);
-            if (employee == null || !employee.IsActive) throw new Exception("Empleado no encontrado.");
+            if (employee == null || !employee.IsActive) throw new NotFoundException("Empleado no encontrado.");
 
             var service = await _serviceRepository.GetByIdAndBusinessAsync(dto.ServiceId, employee.BusinessId);
-            if (service == null || !service.IsActive) throw new Exception("Servicio no encontrado.");
+            if (service == null || !service.IsActive) throw new NotFoundException("Servicio no encontrado.");
 
             var endDate = dto.StartDate.AddMinutes(service.Duration);
 
@@ -44,10 +45,10 @@ namespace NexusFlow.Services.Implementations
             var endTime = TimeOnly.FromDateTime(endDate);
             var schedule = employee.Schedules.First(s => s.DayOfWeek == dto.StartDate.DayOfWeek && s.IsActive);
             if (startTime < schedule.StartTime || endTime > schedule.EndTime)
-                throw new Exception("El horario está fuera del horario laboral del empleado.");
+                throw new BusinessRuleException("El horario está fuera del horario laboral del empleado.");
 
             var hasConflict = await _appointmentRepository.HasConflictAsync(dto.EmployeeId, dto.StartDate, endDate);
-            if (hasConflict) throw new Exception("El empleado ya tiene un turno en ese horario.");
+            if (hasConflict) throw new ConflictException("El empleado ya tiene un turno en ese horario.");
 
             var appointment = new Appointment
             {
@@ -78,14 +79,14 @@ namespace NexusFlow.Services.Implementations
         public async Task<AppointmentResponse> UpdateAppointmentStatusAsync(Guid userId, Guid appointmentId, AppointmentStatus newStatus)
         {
             var appointment = await _appointmentRepository.GetWithDetailsByIdAsync(appointmentId);
-            if (appointment == null) throw new Exception("Turno no encontrado.");
+            if (appointment == null) throw new NotFoundException("Turno no encontrado.");
 
             var isClient = appointment.ClientId == userId;
             var isEmployee = appointment.Employee.UserId == userId;
             var isAdmin = await _userBusinessRepository.IsAdminAsync(userId, appointment.BusinessId);
 
             if (!isClient && !isEmployee && !isAdmin)
-                throw new Exception("No tenés permiso para modificar este turno");
+                throw new ForbiddenException("No tenés permiso para modificar este turno");
 
             var allowedTransitions = new Dictionary<AppointmentStatus, List<AppointmentStatus>>
             {
@@ -96,7 +97,7 @@ namespace NexusFlow.Services.Implementations
             };
 
             if (!allowedTransitions[appointment.Status].Contains(newStatus))
-                throw new Exception($"No se puede cambiar el estado de {appointment.Status} a {newStatus}");
+                throw new BusinessRuleException($"No se puede cambiar el estado de {appointment.Status} a {newStatus}");
 
             appointment.Status = newStatus;
             _appointmentRepository.UpdateStatus(appointment);
@@ -150,12 +151,12 @@ namespace NexusFlow.Services.Implementations
         public async Task<List<AvailableTimeResponse>> GetEmployeeAvailabilityAsync(Guid userBusinessId, Guid serviceId, DateOnly date)
         {
             var employee = await _userBusinessRepository.GetEmployeeByIdWithDetailsAsync(userBusinessId);
-            if (employee == null || !employee.IsActive) throw new Exception("Empleado no encontrado.");
+            if (employee == null || !employee.IsActive) throw new NotFoundException("Empleado no encontrado.");
 
             var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
-            if (service == null || !service.IsActive) throw new Exception("Servicio no encontrado.");
+            if (service == null || !service.IsActive) throw new NotFoundException("Servicio no encontrado.");
 
-            if (!employee.ServiceAssignment.Any(sa => sa.ServiceId == service.Id)) throw new Exception("El empleado no realiza este servicio.");
+            if (!employee.ServiceAssignment.Any(sa => sa.ServiceId == service.Id)) throw new BusinessRuleException("El empleado no realiza este servicio.");
 
             var schedule = employee.Schedules.FirstOrDefault(s =>s.DayOfWeek == date.DayOfWeek && s.IsActive);
             if (schedule == null) return [];
@@ -174,11 +175,11 @@ namespace NexusFlow.Services.Implementations
             DayOfWeek dayOfWeek)
         {
             if (!employee.ServiceAssignment.Any(sa => sa.ServiceId == service.Id))
-                throw new Exception("El empleado no realiza este servicio.");
+                throw new BusinessRuleException("El empleado no realiza este servicio.");
 
             var schedule = employee.Schedules
                 .FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsActive);
-            if (schedule == null) throw new Exception("El empleado no trabaja ese día.");
+            if (schedule == null) throw new BusinessRuleException("El empleado no trabaja ese día.");
         }
 
         private static List<AvailableTimeResponse> GenerateAvailability(

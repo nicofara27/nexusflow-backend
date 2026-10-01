@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Enums;
-using NexusFlow.Services.Implementations;
 using NexusFlow.Services.Interfaces;
 using System.Security.Claims;
 
@@ -51,7 +50,7 @@ namespace NexusFlow.Controllers
         public async Task<IActionResult> GetAppointments([FromQuery] Guid? employeeId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null) throw new Exception("Token invalido.");
+            if (userIdClaim == null) return Unauthorized("Token invalido.");
 
             var userId = Guid.Parse(userIdClaim);
 

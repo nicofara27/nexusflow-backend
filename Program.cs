@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NexusFlow.Data;
+using NexusFlow.Exceptions;
 using NexusFlow.Repositories;
 using NexusFlow.Repositories.Implementations;
 using NexusFlow.Repositories.Interfaces;
@@ -81,10 +82,15 @@ builder.Services.AddScoped<IServicesService, ServicesService>();
 builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
