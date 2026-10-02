@@ -242,4 +242,148 @@ public class AppointmentServiceTests
             "El empleado no realiza este servicio.",
             exception.Message);
     }
+
+    [Fact]
+    public async Task GetEmployeeAvailabilityAsync_WhenScheduleIsAvailable_ReturnsTimeSlotsEveryTenMinutes()
+    {
+        var employee = new UserBusiness
+        {
+            Id = _employeeId,
+            BusinessId = _businessId,
+            IsActive = true,
+            ServiceAssignment =
+            [
+                new ServiceAssignment
+            {
+                ServiceId = _serviceId
+            }
+            ],
+            Schedules =
+            [
+                new EmployeeSchedule
+            {
+                DayOfWeek = _date.DayOfWeek,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 0),
+                IsActive = true
+            }
+            ]
+        };
+
+        var service = new Service
+        {
+            Id = _serviceId,
+            BusinessId = _businessId,
+            Name = "Corte",
+            Duration = 30,
+            Price = 10000,
+            IsActive = true
+        };
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByServiceIdAsync(_serviceId)
+            .Returns(service);
+
+        _appointmentRepository
+            .GetByUserBusinessIdAndDate(_employeeId, _date)
+            .Returns([]);
+
+        var result = await _appointmentService.GetEmployeeAvailabilityAsync(
+            _employeeId,
+            _serviceId,
+            _date);
+
+        Assert.Collection(
+            result,
+            slot =>
+            {
+                Assert.Equal(new TimeOnly(9, 0), slot.StartTime);
+                Assert.Equal(new TimeOnly(9, 30), slot.EndTime);
+            },
+            slot =>
+            {
+                Assert.Equal(new TimeOnly(9, 10), slot.StartTime);
+                Assert.Equal(new TimeOnly(9, 40), slot.EndTime);
+            },
+            slot =>
+            {
+                Assert.Equal(new TimeOnly(9, 20), slot.StartTime);
+                Assert.Equal(new TimeOnly(9, 50), slot.EndTime);
+            },
+            slot =>
+            {
+                Assert.Equal(new TimeOnly(9, 30), slot.StartTime);
+                Assert.Equal(new TimeOnly(10, 0), slot.EndTime);
+            });
+    }
+
+    [Fact]
+    public async Task GetEmployeeAvailabilityAsync_WhenAppointmentOverlapsSlots_ReturnsOnlyAvailableSlots()
+    {
+        var employee = new UserBusiness
+        {
+            Id = _employeeId,
+            BusinessId = _businessId,
+            IsActive = true,
+            ServiceAssignment =
+            [
+                new ServiceAssignment
+            {
+                ServiceId = _serviceId
+            }
+            ],
+            Schedules =
+            [
+                new EmployeeSchedule
+            {
+                DayOfWeek = _date.DayOfWeek,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 0),
+                IsActive = true
+            }
+            ]
+        };
+
+        var service = new Service
+        {
+            Id = _serviceId,
+            BusinessId = _businessId,
+            Name = "Corte",
+            Duration = 30,
+            Price = 10000,
+            IsActive = true
+        };
+
+        var appointment = new Appointment
+        {
+            StartDate = _date.ToDateTime(new TimeOnly(9, 30)),
+            EndDate = _date.ToDateTime(new TimeOnly(10, 0))
+        };
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByServiceIdAsync(_serviceId)
+            .Returns(service);
+
+        _appointmentRepository
+            .GetByUserBusinessIdAndDate(_employeeId, _date)
+            .Returns([appointment]);
+
+        var result = await _appointmentService.GetEmployeeAvailabilityAsync(
+            _employeeId,
+            _serviceId,
+            _date);
+
+        Assert.Single(result);
+
+        Assert.Equal(new TimeOnly(9, 0), result[0].StartTime);
+        Assert.Equal(new TimeOnly(9, 30), result[0].EndTime);
+    }
 }
