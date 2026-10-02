@@ -102,7 +102,7 @@ public class AppointmentServiceTests
     }
 
     [Fact]
-    public async Task GetEmployeeAvailabilityAsync_WhenEmployeeDoesNotExist_ThrowsException()
+    public async Task GetEmployeeAvailabilityAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
     {
         _userBusinessRepository
             .GetEmployeeByIdWithDetailsAsync(_employeeId)
@@ -118,7 +118,7 @@ public class AppointmentServiceTests
     }
 
     [Fact]
-    public async Task GetEmployeeAvailabilityAsync_WhenEmployeeIsInactive_ThrowsException()
+    public async Task GetEmployeeAvailabilityAsync_WhenEmployeeIsInactive_ThrowsNotFoundException()
     {
         var employee = new UserBusiness
         {
@@ -137,5 +137,109 @@ public class AppointmentServiceTests
                 _date));
 
         Assert.Equal("Empleado no encontrado.", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetEmployeeAvailabilityAsync_WhenServiceDoesNotExist_ThrowsNotFoundException()
+    {
+        var employee = new UserBusiness
+        {
+            Id = _employeeId,
+            BusinessId = _businessId,
+            IsActive = true,
+        };
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByServiceIdAsync(_serviceId)
+            .Returns((Service?)null);
+
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
+            () => _appointmentService.GetEmployeeAvailabilityAsync(
+                _employeeId,
+                _serviceId,
+                _date));
+
+        Assert.Equal("Servicio no encontrado.", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetEmployeeAvailabilityAsync_WhenServicesIsInactive_ThrowsNotFoundException()
+    {
+        var employee = new UserBusiness
+        {
+            Id = _employeeId,
+            BusinessId = _businessId,
+            IsActive = true,
+        };
+
+        var service = new Service
+        {
+            Id = _serviceId,
+            BusinessId = _businessId,
+            Name = "Corte",
+            Duration = 30,
+            Price = 10000,
+            IsActive = false,
+        };
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByServiceIdAsync(_serviceId)
+            .Returns(service);
+
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
+            () => _appointmentService.GetEmployeeAvailabilityAsync(
+                _employeeId,
+                _serviceId,
+                _date));
+
+        Assert.Equal("Servicio no encontrado.", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetEmployeeAvailabilityAsync_WhenEmployeeDoesNotPerformService_ThrowsBusinessRuleException()
+    {
+        var employee = new UserBusiness
+        {
+            Id = _employeeId,
+            BusinessId = _businessId,
+            IsActive = true,
+            ServiceAssignment = [],
+        };
+
+        var service = new Service
+        {
+            Id = _serviceId,
+            BusinessId = _businessId,
+            Name = "Corte",
+            Duration = 30,
+            Price = 10000,
+            IsActive = true,
+        };
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByServiceIdAsync(_serviceId)
+            .Returns(service);
+
+        var exception = await Assert.ThrowsAsync<BusinessRuleException>(
+            () => _appointmentService.GetEmployeeAvailabilityAsync(
+                _employeeId,
+                _serviceId,
+                _date));
+
+        Assert.Equal(
+            "El empleado no realiza este servicio.",
+            exception.Message);
     }
 }
