@@ -15,5 +15,6 @@ namespace NexusFlow.Repositories.Interfaces
         Task<Business?> GetBusinessByUserIdAsync(Guid userId);
         Task<List<UserBusiness>> GetEmployeesByBusinessIdAsync(Guid businessId);
         Task<List<UserBusiness>> GetEmployeesByServiceIdAsync(Guid serviceId, Guid businessId);
+        Task LockEmployeeForUpdateAsync(Guid employeeId);
     }
 }

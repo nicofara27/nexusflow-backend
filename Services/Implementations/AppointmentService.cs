@@ -29,51 +29,90 @@ namespace NexusFlow.Services.Implementations
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<AppointmentResponse> CreateAppointmentAsync(Guid clientId, AppointmentRequest dto)
+        public async Task<AppointmentResponse> CreateAppointmentAsync(
+            Guid clientId,
+            AppointmentRequest dto)
         {
-            var employee = await _userBusinessRepository.GetEmployeeByIdWithDetailsAsync(dto.EmployeeId);
-            if (employee == null || !employee.IsActive) throw new NotFoundException("Empleado no encontrado.");
-
-            var service = await _serviceRepository.GetByIdAndBusinessAsync(dto.ServiceId, employee.BusinessId);
-            if (service == null || !service.IsActive) throw new NotFoundException("Servicio no encontrado.");
-
-            var endDate = dto.StartDate.AddMinutes(service.Duration);
-
-            ValidateEmployeeServiceAndSchedule(employee, service, dto.StartDate.DayOfWeek);
-
-            var startTime = TimeOnly.FromDateTime(dto.StartDate);
-            var endTime = TimeOnly.FromDateTime(endDate);
-            var schedule = employee.Schedules.First(s => s.DayOfWeek == dto.StartDate.DayOfWeek && s.IsActive);
-            if (startTime < schedule.StartTime || endTime > schedule.EndTime)
-                throw new BusinessRuleException("El horario está fuera del horario laboral del empleado.");
-
-            var hasConflict = await _appointmentRepository.HasConflictAsync(dto.EmployeeId, dto.StartDate, endDate);
-            if (hasConflict) throw new ConflictException("El empleado ya tiene un turno en ese horario.");
-
-            var appointment = new Appointment
+            return await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                ClientId = clientId,
-                EmployeeId = dto.EmployeeId,
-                ServiceId = dto.ServiceId,
-                BusinessId = employee.BusinessId,
-                StartDate = dto.StartDate,
-                EndDate = endDate,
-                Status = AppointmentStatus.Pending
-            };
+                await _userBusinessRepository
+                    .LockEmployeeForUpdateAsync(dto.EmployeeId);
 
-            _appointmentRepository.Add(appointment);
-            await _unitOfWork.SaveChangesAsync();
+                var employee = await _userBusinessRepository
+                    .GetEmployeeByIdWithDetailsAsync(dto.EmployeeId);
 
-            return new AppointmentResponse
-            {
-                Id = appointment.Id,
-                ServiceName = service.Name,
-                EmployeeName = $"{employee.User.FirstName} {employee.User.LastName}",
-                StartDate = appointment.StartDate,
-                EndDate = appointment.EndDate,
-                Status = appointment.Status,
-                Price = service.Price
-            };
+                if (employee == null || !employee.IsActive)
+                    throw new NotFoundException("Empleado no encontrado.");
+
+                var service = await _serviceRepository
+                    .GetByIdAndBusinessAsync(
+                        dto.ServiceId,
+                        employee.BusinessId);
+
+                if (service == null || !service.IsActive)
+                    throw new NotFoundException("Servicio no encontrado.");
+
+                var endDate =
+                    dto.StartDate.AddMinutes(service.Duration);
+
+                ValidateEmployeeServiceAndSchedule(
+                    employee,
+                    service,
+                    dto.StartDate.DayOfWeek);
+
+                var startTime = TimeOnly.FromDateTime(dto.StartDate);
+                var endTime = TimeOnly.FromDateTime(endDate);
+
+                var schedule = employee.Schedules.First(
+                    s => s.DayOfWeek == dto.StartDate.DayOfWeek
+                         && s.IsActive);
+
+                if (startTime < schedule.StartTime ||
+                    endTime > schedule.EndTime)
+                {
+                    throw new BusinessRuleException(
+                        "El horario está fuera del horario laboral del empleado.");
+                }
+
+                var hasConflict =
+                    await _appointmentRepository.HasConflictAsync(
+                        dto.EmployeeId,
+                        dto.StartDate,
+                        endDate);
+
+                if (hasConflict)
+                {
+                    throw new ConflictException(
+                        "El empleado ya tiene un turno en ese horario.");
+                }
+
+                var appointment = new Appointment
+                {
+                    ClientId = clientId,
+                    EmployeeId = dto.EmployeeId,
+                    ServiceId = dto.ServiceId,
+                    BusinessId = employee.BusinessId,
+                    StartDate = dto.StartDate,
+                    EndDate = endDate,
+                    Status = AppointmentStatus.Pending
+                };
+
+                _appointmentRepository.Add(appointment);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new AppointmentResponse
+                {
+                    Id = appointment.Id,
+                    ServiceName = service.Name,
+                    EmployeeName =
+                        $"{employee.User.FirstName} {employee.User.LastName}",
+                    StartDate = appointment.StartDate,
+                    EndDate = appointment.EndDate,
+                    Status = appointment.Status,
+                    Price = service.Price
+                };
+            });
         }
 
         public async Task<AppointmentResponse> UpdateAppointmentStatusAsync(Guid userId, Guid appointmentId, AppointmentStatus newStatus)

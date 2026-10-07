@@ -73,6 +73,10 @@ public class AppointmentServiceCreateTests
         await _unitOfWork
             .DidNotReceive()
             .SaveChangesAsync();
+
+        await _userBusinessRepository
+            .Received(1)
+            .LockEmployeeForUpdateAsync(_employeeId);
     }
 
     [Fact]
@@ -160,6 +164,10 @@ public class AppointmentServiceCreateTests
         await _unitOfWork
             .Received(1)
             .SaveChangesAsync();
+
+        await _userBusinessRepository
+            .Received(1)
+            .LockEmployeeForUpdateAsync(_employeeId);
     }
 
     [Fact]

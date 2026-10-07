@@ -1,6 +1,7 @@
 using NexusFlow.Models.Entities;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Implementations;
+using NexusFlow.Models.DTOs.Appointment;
 using NSubstitute;
 
 namespace NexusFlow.Tests.Services;
@@ -29,6 +30,17 @@ public abstract class AppointmentServiceTestBase
         _appointmentRepository = Substitute.For<IAppointmentRepository>();
         _employeeRepository = Substitute.For<IEmployeeRepository>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
+
+        _unitOfWork
+        .ExecuteInTransactionAsync(
+            Arg.Any<Func<Task<AppointmentResponse>>>())
+        .Returns(callInfo =>
+        {
+            var action =
+                callInfo.ArgAt<Func<Task<AppointmentResponse>>>(0);
+
+            return action();
+        });
 
         _appointmentService = new AppointmentService(
             _userBusinessRepository,

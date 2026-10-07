@@ -19,11 +19,26 @@ namespace NexusFlow.Repositories.Implementations
 
         public async Task ExecuteInTransactionAsync(Func<Task> action)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            await ExecuteInTransactionAsync(async () =>
             {
                 await action();
+                return true;
+            });
+        }
+
+
+        public async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> action)
+        {
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var result = await action();
+
                 await transaction.CommitAsync();
+
+                return result;
             }
             catch
             {
@@ -31,5 +46,6 @@ namespace NexusFlow.Repositories.Implementations
                 throw;
             }
         }
+
     }
 }

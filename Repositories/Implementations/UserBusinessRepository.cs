@@ -97,5 +97,13 @@ namespace NexusFlow.Repositories.Implementations
                     ub.ServiceAssignment.Any(sa => sa.ServiceId == serviceId))
                 .ToListAsync();
         }
+
+        public async Task LockEmployeeForUpdateAsync(Guid employeeId)
+        {
+            await _context.UsersBusiness
+                .FromSqlInterpolated(
+                    $"SELECT * FROM UsersBusiness WHERE Id = {employeeId} FOR UPDATE")
+                .SingleOrDefaultAsync();
+        }
     }
 }
