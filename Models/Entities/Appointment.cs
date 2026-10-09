@@ -17,5 +17,7 @@ namespace NexusFlow.Models.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
+        public string? ConfirmationTokenHash { get; set; }
+        public DateTime? ConfirmationTokenExpiresAt { get; set; }
     }
 }

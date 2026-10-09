@@ -4,6 +4,8 @@ using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
+using NexusFlow.Services.mappers;
+using NexusFlow.Services.Helpers;
 
 namespace NexusFlow.Services.Implementations
 {
@@ -12,7 +14,6 @@ namespace NexusFlow.Services.Implementations
         private readonly IUserBusinessRepository _userBusinessRepository;
         private readonly IServiceRepository _serviceRepository;
         private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IEmployeeRepository _employeeRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AppointmentService(
@@ -25,13 +26,10 @@ namespace NexusFlow.Services.Implementations
             _userBusinessRepository = userBusinessRepository;
             _serviceRepository = serviceRepository;
             _appointmentRepository = appointmentRepository;
-            _employeeRepository = employeeRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<AppointmentResponse> CreateAppointmentAsync(
-            Guid clientId,
-            AppointmentRequest dto)
+        public async Task<AppointmentResponse> CreateAppointmentAsync(Guid clientId, AppointmentRequest dto)
         {
             return await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
@@ -86,6 +84,9 @@ namespace NexusFlow.Services.Implementations
                         "El empleado ya tiene un turno en ese horario.");
                 }
 
+                var confirmationToken = ConfirmationTokenHelper.Generate();
+                var confirmationTokenHash = ConfirmationTokenHelper.Hash(confirmationToken);
+
                 var appointment = new Appointment
                 {
                     ClientId = clientId,
@@ -94,30 +95,48 @@ namespace NexusFlow.Services.Implementations
                     BusinessId = employee.BusinessId,
                     StartDate = dto.StartDate,
                     EndDate = endDate,
-                    Status = AppointmentStatus.Pending
+                    Status = AppointmentStatus.Pending,
+                    ConfirmationTokenHash = confirmationTokenHash,
+                    ConfirmationTokenExpiresAt = DateTime.UtcNow.AddHours(1)
                 };
 
                 _appointmentRepository.Add(appointment);
 
                 await _unitOfWork.SaveChangesAsync();
 
-                return new AppointmentResponse
-                {
-                    Id = appointment.Id,
-                    ServiceName = service.Name,
-                    EmployeeName =
-                        $"{employee.User.FirstName} {employee.User.LastName}",
-                    StartDate = appointment.StartDate,
-                    EndDate = appointment.EndDate,
-                    Status = appointment.Status,
-                    Price = service.Price
-                };
+                return AppointmentMapper.ToResponse(appointment, service, employee);
             });
         }
 
-        public async Task<AppointmentResponse> UpdateAppointmentStatusAsync(Guid userId, Guid appointmentId, AppointmentStatus newStatus)
+        public async Task<AppointmentResponse> ConfirmAppointmentAsync(string token)
+        {
+            var tokenHash = ConfirmationTokenHelper.Hash(token);
+
+            var appointment = await _appointmentRepository.GetByConfirmationTokenHashAsync(tokenHash);
+            if (appointment == null) throw new NotFoundException("Token de confirmación inválido.");
+
+            if (appointment.Status != AppointmentStatus.Pending) throw new BusinessRuleException("El turno ya no está pendiente de confirmación.");
+
+            if(appointment.ConfirmationTokenExpiresAt == null || 
+                appointment.ConfirmationTokenExpiresAt < DateTime.UtcNow)
+            {
+                throw new BusinessRuleException("El token de confirmación expiró.");
+            }
+
+            appointment.Status = AppointmentStatus.Confirmed;
+            appointment.ConfirmationTokenHash = null;
+            appointment.ConfirmationTokenExpiresAt = null;
+
+            _appointmentRepository.UpdateStatus(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            return AppointmentMapper.ToResponse(appointment);
+        }
+
+        public async Task<AppointmentResponse> CancelAppointmentAsync(Guid userId, Guid appointmentId)
         {
             var appointment = await _appointmentRepository.GetWithDetailsByIdAsync(appointmentId);
+
             if (appointment == null) throw new NotFoundException("Turno no encontrado.");
 
             var isClient = appointment.ClientId == userId;
@@ -125,33 +144,47 @@ namespace NexusFlow.Services.Implementations
             var isAdmin = await _userBusinessRepository.IsAdminAsync(userId, appointment.BusinessId);
 
             if (!isClient && !isEmployee && !isAdmin)
-                throw new ForbiddenException("No tenés permiso para modificar este turno");
+                throw new ForbiddenException("No tenés permiso para cancelar este turno.");
 
-            var allowedTransitions = new Dictionary<AppointmentStatus, List<AppointmentStatus>>
+            if (appointment.Status is not AppointmentStatus.Pending and not AppointmentStatus.Confirmed)
             {
-                { AppointmentStatus.Pending, [AppointmentStatus.Confirmed, AppointmentStatus.Cancelled] },
-                { AppointmentStatus.Confirmed, [AppointmentStatus.Completed, AppointmentStatus.Cancelled] },
-                { AppointmentStatus.Completed, [] },
-                { AppointmentStatus.Cancelled, [] }
-            };
+                throw new BusinessRuleException($"No se puede cancelar un turno en estado {appointment.Status}.");
+            }
 
-            if (!allowedTransitions[appointment.Status].Contains(newStatus))
-                throw new BusinessRuleException($"No se puede cambiar el estado de {appointment.Status} a {newStatus}");
+            appointment.Status = AppointmentStatus.Cancelled;
 
-            appointment.Status = newStatus;
             _appointmentRepository.UpdateStatus(appointment);
             await _unitOfWork.SaveChangesAsync();
 
-            return new AppointmentResponse
+            return AppointmentMapper.ToResponse(appointment);
+        }
+
+        public async Task<AppointmentResponse> CompleteAppointmentAsync(Guid userId, Guid appointmentId)
+        {
+            var appointment = await _appointmentRepository.GetWithDetailsByIdAsync(appointmentId);
+
+            if (appointment == null) throw new NotFoundException("Turno no encontrado.");
+
+            var isEmployee = appointment.Employee.UserId == userId;
+
+            var isAdmin = await _userBusinessRepository.IsAdminAsync(
+                userId,
+                appointment.BusinessId);
+
+            if (!isEmployee && !isAdmin)
+                throw new ForbiddenException("No tenés permiso para completar este turno.");
+
+            if (appointment.Status != AppointmentStatus.Confirmed)
             {
-                Id = appointment.Id,
-                ServiceName = appointment.Service.Name,
-                EmployeeName = $"{appointment.Employee.User.FirstName} {appointment.Employee.User.LastName}",
-                StartDate = appointment.StartDate,
-                EndDate = appointment.EndDate,
-                Status = appointment.Status,
-                Price = appointment.Service.Price
-            };
+                throw new BusinessRuleException("Solo se puede completar un turno confirmado.");
+            }
+
+            appointment.Status = AppointmentStatus.Completed;
+
+            _appointmentRepository.UpdateStatus(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            return AppointmentMapper.ToResponse(appointment);
         }
 
         public async Task<List<AppointmentResponse>> GetAppointmentsAsync(Guid userId, Guid? employeeId = null)
@@ -175,16 +208,7 @@ namespace NexusFlow.Services.Implementations
                 appointments = await _appointmentRepository.GetByClientIdAsync(userId);
             }
 
-            return appointments.Select(a => new AppointmentResponse
-            {
-                Id = a.Id,
-                ServiceName = a.Service.Name,
-                EmployeeName = $"{a.Employee.User.FirstName} {a.Employee.User.LastName}",
-                StartDate = a.StartDate,
-                EndDate = a.EndDate,
-                Status = a.Status,
-                Price = a.Service.Price
-            }).ToList();
+            return appointments.Select(AppointmentMapper.ToResponse).ToList();
         }
 
         public async Task<List<AvailableTimeResponse>> GetEmployeeAvailabilityAsync(Guid userBusinessId, Guid serviceId, DateOnly date)

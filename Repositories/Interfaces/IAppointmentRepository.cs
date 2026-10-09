@@ -15,5 +15,6 @@ namespace NexusFlow.Repositories.Interfaces
         Task<List<Appointment>> GetByUserBusinessIdAndDate(Guid userBusinessId, DateOnly date);
         Task<bool> HasConflictAsync(Guid employeeId, DateTime startDate,  DateTime endDate);
         Task<Appointment?> GetWithDetailsByIdAsync(Guid appointmentId);
+        Task<Appointment?> GetByConfirmationTokenHashAsync(string tokenHash);
     }
 }

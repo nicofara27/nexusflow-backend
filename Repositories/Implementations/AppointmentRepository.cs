@@ -68,8 +68,10 @@ namespace NexusFlow.Repositories.Implementations
             var endOfDay = startOfDay.AddDays(1);
 
             return await _context.Appointments
+                .AsNoTracking()
                 .Where(a =>
                     a.EmployeeId == userBusinessId &&
+                    a.Status != AppointmentStatus.Cancelled &&
                     a.StartDate >= startOfDay &&
                     a.EndDate < endOfDay)
                 .OrderBy(a => a.StartDate)
@@ -91,6 +93,11 @@ namespace NexusFlow.Repositories.Implementations
         {
             return await GetBaseQuery()
                 .FirstOrDefaultAsync(a => a.Id == appointmentId);
+        }
+
+        public async Task<Appointment?> GetByConfirmationTokenHashAsync(string tokenHash)
+        {
+            return await GetBaseQuery().FirstOrDefaultAsync(a => a.ConfirmationTokenHash == tokenHash); 
         }
     }
 }

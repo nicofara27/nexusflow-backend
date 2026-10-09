@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Enums;
 using NexusFlow.Services.Interfaces;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace NexusFlow.Controllers
@@ -31,18 +32,43 @@ namespace NexusFlow.Controllers
             return CreatedAtAction(nameof(CreateAppointment), new { id = appointment.Id }, appointment);
         }
 
+        [AllowAnonymous]
+        [HttpPost("confirm")]
+        public async Task<IActionResult> ConfirmAppointment([FromBody] ConfirmAppointmentRequest request)
+        {
+
+            var result = await _appointmentService.ConfirmAppointmentAsync(request.Token);
+          
+            return Ok(result);
+        }
+
         [Authorize]
-        [HttpPut("{appointmentId}")]
-        public async Task<IActionResult> UpdateAppointmentStatus(Guid appointmentId, [FromBody] AppointmentStatus newStatus)
+        [HttpPost("{appointmentId:guid}/cancel")]
+        public async Task<ActionResult> CancelAppointment(Guid appointmentId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null) return Unauthorized("Token invalido.");
+            Debug.WriteLine(userIdClaim);
+            if (userIdClaim == null) return Unauthorized("Token inválido.");
 
             var userId = Guid.Parse(userIdClaim);
 
-            var appointment = await _appointmentService.UpdateAppointmentStatusAsync(userId, appointmentId, newStatus);
+            var result = await _appointmentService.CancelAppointmentAsync(userId, appointmentId);
 
-            return Ok(appointment);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("{appointmentId:guid}/complete")]
+        public async Task<ActionResult> CompleteAppointment(Guid appointmentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized("Token inválido.");
+
+            var result = await _appointmentService.CompleteAppointmentAsync(userId, appointmentId);
+
+            return Ok(result);
         }
 
         [Authorize]

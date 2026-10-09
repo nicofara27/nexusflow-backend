@@ -2,6 +2,7 @@ using NexusFlow.Models.Entities;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Implementations;
 using NexusFlow.Models.DTOs.Appointment;
+using NexusFlow.Models.Enums;
 using NSubstitute;
 
 namespace NexusFlow.Tests.Services;
@@ -17,9 +18,11 @@ public abstract class AppointmentServiceTestBase
     protected readonly AppointmentService _appointmentService;
 
     protected readonly Guid _employeeId = Guid.NewGuid();
+    protected readonly Guid _employeeUserId = Guid.NewGuid();
     protected readonly Guid _serviceId = Guid.NewGuid();
     protected readonly Guid _businessId = Guid.NewGuid();
     protected readonly Guid _clientId = Guid.NewGuid();
+    protected readonly Guid _appointmentId = Guid.NewGuid();
 
     protected readonly DateOnly _date = new(2026, 10, 5);
 
@@ -77,6 +80,33 @@ public abstract class AppointmentServiceTestBase
             Duration = 30,
             Price = 10000,
             IsActive = isActive
+        };
+    }
+
+    protected Appointment CreateAppointment(
+        AppointmentStatus status = AppointmentStatus.Pending,
+        Guid? clientId = null,
+        Guid? employeeUserId = null,
+        string? confirmationTokenHash = null,
+        DateTime? confirmationTokenExpiresAt = null)
+    {
+        var employee = CreateEmployee();
+        employee.UserId = employeeUserId ?? Guid.NewGuid();
+
+        return new Appointment
+        {
+            Id = _appointmentId,
+            EmployeeId = _employeeId,
+            Employee = employee,
+            ClientId = clientId ?? _clientId,
+            ServiceId = _serviceId,
+            Service = CreateService(),
+            BusinessId = _businessId,
+            StartDate = _date.ToDateTime(new TimeOnly(9, 30)),
+            EndDate = _date.ToDateTime(new TimeOnly(10, 0)),
+            Status = status,
+            ConfirmationTokenHash = confirmationTokenHash,
+            ConfirmationTokenExpiresAt = confirmationTokenExpiresAt
         };
     }
 }
