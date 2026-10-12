@@ -69,6 +69,7 @@ builder.Services.AddScoped<IUserBusinessRepository, UserBusinessRepository>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.AddScoped<IAppointmentNotificationService, AppointmentNotificationService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBusinessService, BusinessService>();

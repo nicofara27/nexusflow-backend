@@ -168,6 +168,13 @@ public class AppointmentServiceCreateTests
         await _userBusinessRepository
             .Received(1)
             .LockEmployeeForUpdateAsync(_employeeId);
+
+        await _appointmentNotificationService
+            .Received(1)
+            .SendConfirmationAsync(
+                _clientId,
+                Arg.Any<Guid>(),
+                Arg.Any<string>());
     }
 
     [Fact]

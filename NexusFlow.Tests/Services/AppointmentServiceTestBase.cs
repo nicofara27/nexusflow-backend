@@ -1,6 +1,7 @@
 using NexusFlow.Models.Entities;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Implementations;
+using NexusFlow.Services.Interfaces;
 using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Enums;
 using NSubstitute;
@@ -9,11 +10,13 @@ namespace NexusFlow.Tests.Services;
 
 public abstract class AppointmentServiceTestBase
 {
-    protected readonly IUserBusinessRepository _userBusinessRepository;
-    protected readonly IServiceRepository _serviceRepository;
     protected readonly IAppointmentRepository _appointmentRepository;
     protected readonly IEmployeeRepository _employeeRepository;
+    protected readonly IServiceRepository _serviceRepository;
     protected readonly IUnitOfWork _unitOfWork;
+    protected readonly IUserBusinessRepository _userBusinessRepository;
+
+    protected readonly IAppointmentNotificationService _appointmentNotificationService;
 
     protected readonly AppointmentService _appointmentService;
 
@@ -34,6 +37,8 @@ public abstract class AppointmentServiceTestBase
         _employeeRepository = Substitute.For<IEmployeeRepository>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
 
+        _appointmentNotificationService = Substitute.For<IAppointmentNotificationService>();
+
         _unitOfWork
         .ExecuteInTransactionAsync(
             Arg.Any<Func<Task<AppointmentResponse>>>())
@@ -46,6 +51,7 @@ public abstract class AppointmentServiceTestBase
         });
 
         _appointmentService = new AppointmentService(
+            _appointmentNotificationService,
             _userBusinessRepository,
             _serviceRepository,
             _appointmentRepository,

@@ -11,18 +11,21 @@ namespace NexusFlow.Services.Implementations
 {
     public class AppointmentService : IAppointmentService
     {
+        private readonly IAppointmentNotificationService _appointmentNotificationService;
         private readonly IUserBusinessRepository _userBusinessRepository;
         private readonly IServiceRepository _serviceRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AppointmentService(
+            IAppointmentNotificationService appointmentNotificationService,
             IUserBusinessRepository userBusinessRepository,
             IServiceRepository serviceRepository,
             IAppointmentRepository appointmentRepository,
             IEmployeeRepository employeeRepository,
             IUnitOfWork unitOfWork)
         {
+            _appointmentNotificationService = appointmentNotificationService;
             _userBusinessRepository = userBusinessRepository;
             _serviceRepository = serviceRepository;
             _appointmentRepository = appointmentRepository;
@@ -31,7 +34,10 @@ namespace NexusFlow.Services.Implementations
 
         public async Task<AppointmentResponse> CreateAppointmentAsync(Guid clientId, AppointmentRequest dto)
         {
-            return await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            var confirmationToken = ConfirmationTokenHelper.Generate();
+            var confirmationTokenHash = ConfirmationTokenHelper.Hash(confirmationToken);
+
+            var result = await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 await _userBusinessRepository
                     .LockEmployeeForUpdateAsync(dto.EmployeeId);
@@ -84,9 +90,6 @@ namespace NexusFlow.Services.Implementations
                         "El empleado ya tiene un turno en ese horario.");
                 }
 
-                var confirmationToken = ConfirmationTokenHelper.Generate();
-                var confirmationTokenHash = ConfirmationTokenHelper.Hash(confirmationToken);
-
                 var appointment = new Appointment
                 {
                     ClientId = clientId,
@@ -106,6 +109,10 @@ namespace NexusFlow.Services.Implementations
 
                 return AppointmentMapper.ToResponse(appointment, service, employee);
             });
+
+            await _appointmentNotificationService.SendConfirmationAsync(clientId, result.Id, confirmationToken);
+
+            return result;
         }
 
         public async Task<AppointmentResponse> ConfirmAppointmentAsync(string token)
@@ -117,7 +124,7 @@ namespace NexusFlow.Services.Implementations
 
             if (appointment.Status != AppointmentStatus.Pending) throw new BusinessRuleException("El turno ya no está pendiente de confirmación.");
 
-            if(appointment.ConfirmationTokenExpiresAt == null || 
+            if (appointment.ConfirmationTokenExpiresAt == null ||
                 appointment.ConfirmationTokenExpiresAt < DateTime.UtcNow)
             {
                 throw new BusinessRuleException("El token de confirmación expiró.");
@@ -221,7 +228,7 @@ namespace NexusFlow.Services.Implementations
 
             if (!employee.ServiceAssignment.Any(sa => sa.ServiceId == service.Id)) throw new BusinessRuleException("El empleado no realiza este servicio.");
 
-            var schedule = employee.Schedules.FirstOrDefault(s =>s.DayOfWeek == date.DayOfWeek && s.IsActive);
+            var schedule = employee.Schedules.FirstOrDefault(s => s.DayOfWeek == date.DayOfWeek && s.IsActive);
             if (schedule == null) return [];
 
             var appointments = await _appointmentRepository.GetByUserBusinessIdAndDate(userBusinessId, date);
