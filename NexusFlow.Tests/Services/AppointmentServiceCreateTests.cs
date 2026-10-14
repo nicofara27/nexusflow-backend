@@ -482,6 +482,96 @@ public class AppointmentServiceCreateTests
             .SaveChangesAsync();
     }
 
+    [Fact]
+    public async Task CreateAppointmentAsync_WhenNotificationFails_StillReturnsCreatedAppointment()
+    {
+        var startDate = _date.ToDateTime(new TimeOnly(9, 30));
+        var endDate = startDate.AddMinutes(30);
+
+        var employee = CreateEmployee();
+
+        employee.ServiceAssignment =
+        [
+            new ServiceAssignment
+        {
+            ServiceId = _serviceId
+        }
+        ];
+
+        employee.Schedules =
+        [
+            new EmployeeSchedule
+        {
+            DayOfWeek = _date.DayOfWeek,
+            StartTime = new TimeOnly(9, 0),
+            EndTime = new TimeOnly(18, 0),
+            IsActive = true
+        }
+        ];
+
+        var service = CreateService();
+
+        var request = new AppointmentRequest
+        {
+            EmployeeId = _employeeId,
+            ServiceId = _serviceId,
+            StartDate = startDate
+        };
+
+        Appointment? createdAppointment = null;
+
+        _userBusinessRepository
+            .GetEmployeeByIdWithDetailsAsync(_employeeId)
+            .Returns(employee);
+
+        _serviceRepository
+            .GetByIdAndBusinessAsync(_serviceId, _businessId)
+            .Returns(service);
+
+        _appointmentRepository
+            .HasConflictAsync(_employeeId, startDate, endDate)
+            .Returns(false);
+
+        _appointmentRepository
+            .When(x => x.Add(Arg.Any<Appointment>()))
+            .Do(call =>
+            {
+                createdAppointment = call.Arg<Appointment>();
+            });
+
+        _appointmentNotificationService
+            .SendConfirmationAsync(
+                _clientId,
+                Arg.Any<Guid>(),
+                Arg.Any<string>())
+            .Returns(Task.FromException(new Exception("Error SMTP")));
+
+        var result = await _appointmentService.CreateAppointmentAsync(
+            _clientId,
+            request);
+
+        Assert.NotNull(result);
+        Assert.NotNull(createdAppointment);
+
+        Assert.Equal(_clientId, createdAppointment.ClientId);
+        Assert.Equal(AppointmentStatus.Pending, createdAppointment.Status);
+
+        _appointmentRepository
+            .Received(1)
+            .Add(Arg.Any<Appointment>());
+
+        await _unitOfWork
+            .Received(1)
+            .SaveChangesAsync();
+
+        await _appointmentNotificationService
+            .Received(1)
+            .SendConfirmationAsync(
+                _clientId,
+                Arg.Any<Guid>(),
+                Arg.Any<string>());
+    }
+
     [Theory]
     [InlineData(8, 45)]
     [InlineData(17, 45)]

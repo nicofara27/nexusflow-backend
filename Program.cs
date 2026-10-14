@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NexusFlow.Configuration;
 using NexusFlow.Data;
 using NexusFlow.Exceptions;
 using NexusFlow.Repositories;
@@ -14,6 +15,9 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
@@ -75,6 +79,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddScoped<IBusinessCategroyService, BusinessCategoryService>();
 builder.Services.AddScoped<IBusinessScheduleService, BusinessScheduleService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();

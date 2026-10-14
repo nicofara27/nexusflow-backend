@@ -5,6 +5,7 @@ using NexusFlow.Services.Interfaces;
 using NexusFlow.Models.DTOs.Appointment;
 using NexusFlow.Models.Enums;
 using NSubstitute;
+using Microsoft.Extensions.Logging;
 
 namespace NexusFlow.Tests.Services;
 
@@ -17,6 +18,7 @@ public abstract class AppointmentServiceTestBase
     protected readonly IUserBusinessRepository _userBusinessRepository;
 
     protected readonly IAppointmentNotificationService _appointmentNotificationService;
+    protected readonly ILogger<AppointmentService> _logger;
 
     protected readonly AppointmentService _appointmentService;
 
@@ -36,6 +38,7 @@ public abstract class AppointmentServiceTestBase
         _appointmentRepository = Substitute.For<IAppointmentRepository>();
         _employeeRepository = Substitute.For<IEmployeeRepository>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
+        _logger = Substitute.For<ILogger<AppointmentService>>();
 
         _appointmentNotificationService = Substitute.For<IAppointmentNotificationService>();
 
@@ -56,7 +59,8 @@ public abstract class AppointmentServiceTestBase
             _serviceRepository,
             _appointmentRepository,
             _employeeRepository,
-            _unitOfWork);
+            _unitOfWork,
+            _logger);
     }
 
     protected UserBusiness CreateEmployee(bool isActive = true)

@@ -17,19 +17,24 @@ namespace NexusFlow.Services.Implementations
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly ILogger<AppointmentService> _logger;
+
         public AppointmentService(
             IAppointmentNotificationService appointmentNotificationService,
             IUserBusinessRepository userBusinessRepository,
             IServiceRepository serviceRepository,
             IAppointmentRepository appointmentRepository,
             IEmployeeRepository employeeRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ILogger<AppointmentService> logger)
         {
             _appointmentNotificationService = appointmentNotificationService;
             _userBusinessRepository = userBusinessRepository;
             _serviceRepository = serviceRepository;
             _appointmentRepository = appointmentRepository;
             _unitOfWork = unitOfWork;
+
+            _logger = logger;
         }
 
         public async Task<AppointmentResponse> CreateAppointmentAsync(Guid clientId, AppointmentRequest dto)
@@ -110,7 +115,21 @@ namespace NexusFlow.Services.Implementations
                 return AppointmentMapper.ToResponse(appointment, service, employee);
             });
 
-            await _appointmentNotificationService.SendConfirmationAsync(clientId, result.Id, confirmationToken);
+            try
+            {
+                await _appointmentNotificationService.SendConfirmationAsync(
+                    clientId,
+                    result.Id,
+                    confirmationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No se pudo enviar el correo de confirmación para el turno {AppointmentId}",
+                    result.Id);
+            }
+
 
             return result;
         }
