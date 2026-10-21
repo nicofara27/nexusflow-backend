@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.Auth;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.Auth;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -36,7 +37,7 @@ namespace NexusFlow.Services.Implementations
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
             var exists = await _userRepository.ExistsByEmailAsync(normalizedEmail);
 
-            if (exists) throw new ArgumentException("El email ya esta registrado.");
+            if (exists) throw new ConflictException("El email ya esta registrado.");
 
             var passwordHash = _passwordService.hashPassword(dto.Password);
 
@@ -74,10 +75,10 @@ namespace NexusFlow.Services.Implementations
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
             var user = await _userRepository.GetByEmailAsync(normalizedEmail);
-            if (user == null) throw new ArgumentException("Usuario no encontrado");
+            if (user == null) throw new NotFoundException("Usuario no encontrado");
 
             var isValid = _passwordService.verifyPassword(dto.Password, user.PasswordHash);
-            if (!isValid) throw new ArgumentException("Credenciales invalidas");
+            if (!isValid) throw new UnauthorizedException("Credenciales invalidas");
 
             var token = _jwtService.GenerateToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
@@ -101,12 +102,12 @@ namespace NexusFlow.Services.Implementations
         public async Task<RegisterResponse> RegisterEmployeeAsync(RegisterRequest dto, Guid adminId)
         {
             var adminUserBusiness = await _userBusinessRepository.GetByUserIdAsync(adminId, BusinessRole.Admin);
-            if (adminUserBusiness == null) throw new Exception("No tienes permisos para crear servicios");
+            if (adminUserBusiness == null) throw new ForbiddenException("No tienes permisos para crear servicios");
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
             var exists = await _userRepository.ExistsByEmailAsync(normalizedEmail);
 
-            if (exists) throw new Exception("El email ya esta registrado.");
+            if (exists) throw new ConflictException("El email ya esta registrado.") 
 
             var passwordHash = _passwordService.hashPassword(dto.Password);
 
@@ -150,15 +151,15 @@ namespace NexusFlow.Services.Implementations
         public async Task<RegisterResponse> RegisterAdminAsync(RegisterAdminRequest dto, Guid superAdminId)
         {
             var SuperAdminUserBusiness = await _userRepository.IsSuperAdminAsync(superAdminId);
-            if (!SuperAdminUserBusiness) throw new Exception("No tienes permisos para crear servicios.");
+            if (!SuperAdminUserBusiness) throw new ForbiddenException("No tienes permisos para crear servicios.");
 
             var business = await _businessRepository.GetByIdAsync(dto.BusinessId);
-            if (business == null) throw new Exception("Negocio no encontrado.");
+            if (business == null) throw new NotFoundException("Negocio no encontrado.");
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
             var exists = await _userRepository.ExistsByEmailAsync(normalizedEmail);
 
-            if (exists) throw new Exception("El email ya esta registrado.");
+            if (exists) throw new ConflictException("El email ya esta registrado.");
 
             var passwordHash = _passwordService.hashPassword(dto.Password);
 
@@ -202,10 +203,10 @@ namespace NexusFlow.Services.Implementations
         public async Task ChangePasswordAsync(ChangePasswordRequest dto, Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) throw new Exception("Usuario no encontrado.");
+            if (user == null) throw new NotFoundException("Usuario no encontrado.");
 
-            var isPasswordValid = _passwordService.verifyPassword(dto.CurrentPassword, user.PasswordHash);
-            if (!isPasswordValid) throw new Exception("La contraseña actual es incorrecta.");
+                var isPasswordValid = _passwordService.verifyPassword(dto.CurrentPassword, user.PasswordHash);
+            if (!isPasswordValid) throw new UnauthorizedException("La contraseña actual es incorrecta.");
 
             user.PasswordHash = _passwordService.hashPassword(dto.NewPassword); 
 
@@ -216,7 +217,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<AuthResult> RefreshAsync(string refreshToken)
         {
             var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
-            if (user == null) throw new UnauthorizedAccessException("Refresh token inválido.");
+            if (user == null) throw new UnauthorizedException("Refresh token inválido o expirado");
 
             if (user.RefreshTokenExpiry == null ||
                user.RefreshTokenExpiry <= DateTime.UtcNow)
@@ -226,7 +227,7 @@ namespace NexusFlow.Services.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
 
-                throw new UnauthorizedAccessException("Refresh token expirado.");
+                throw new UnauthorizedException("Refresh token inválido o expirado");
             }
 
             var token = _jwtService.GenerateToken(user);

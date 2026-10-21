@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.Business;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.Business;
 using NexusFlow.Models.DTOs.BusinessSchedule;
 using NexusFlow.Models.DTOs.Employee;
 using NexusFlow.Models.DTOs.Service;
@@ -34,11 +35,11 @@ namespace NexusFlow.Services.Implementations
         {
             var user = await _userRepository.GetByIdAsync(userId);
 
-            if (user == null) throw new Exception("Usuario no encontrado");
+            if (user == null) throw new NotFoundException("Usuario no encontrado");
 
             var category = await _businessCategoryRepository.GetByIdAsync(dto.BusinessCategoryId);
 
-            if (category == null) throw new Exception("Categoría de negocio no encontrada");
+            if (category == null) throw new NotFoundException("Categoría de negocio no encontrada");
 
             var business = new Business
             {
@@ -74,7 +75,7 @@ namespace NexusFlow.Services.Implementations
         {
             var userBusiness = await _userBusinessRepository.GetByUserIdWithBusinessAsync(userId);
 
-            if (userBusiness == null) throw new Exception("Negocio no encontrado.");
+            if (userBusiness == null) throw new NotFoundException("Negocio no encontrado.");
 
             return MapToResponse(userBusiness.Business, userBusiness.Business.BusinessCategory.Name);
 
@@ -83,14 +84,14 @@ namespace NexusFlow.Services.Implementations
         public async Task<BusinessResponse> UpdateBusinessAsync(Guid userId, BusinessRequest dto)
         {
             var business = await _userBusinessRepository.GetBusinessByUserIdAsync(userId);
-            if (business == null) throw new Exception("Negocio no encontrado.");
+            if (business == null) throw new NotFoundException("Negocio no encontrado.");
 
             var category = await _businessCategoryRepository.GetByIdAsync(dto.BusinessCategoryId);
-            if (category == null) throw new Exception("Categoría de negocio no encontrada");
+            if (category == null) throw new NotFoundException("Categoría de negocio no encontrada");
 
             if (dto.Latitude.HasValue != dto.Longitude.HasValue)
             {
-                throw new Exception("La latitud y longitud deben proporcionarse juntas.");
+                throw new ValidationException("La latitud y longitud deben proporcionarse juntas.");
             }
 
             business.Name = dto.Name;
@@ -118,7 +119,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<BusinessPublicDetailsResponse> GetPublicByIdAsync(Guid businessId)
         {
             var business = await _businessRepository.GetPublicByIdAsync(businessId);
-            if (business == null) throw new Exception("Negocio no encontrado.");
+            if (business == null) throw new NotFoundException("Negocio no encontrado.");
 
             return MapToPublicDetailsResponse(business);
         }

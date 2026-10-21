@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.User;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.User;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
 
@@ -17,7 +18,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<GetProfileResponse> GetProfileAsync(Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) throw new Exception("Usuario no encontrado.");
+            if (user == null) throw new NotFoundException("Usuario no encontrado.");
 
             return new GetProfileResponse
             {
@@ -30,7 +31,13 @@ namespace NexusFlow.Services.Implementations
         public async Task<UpdateProfileResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest dto)
         {
             var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) throw new Exception("Usuario no encontrado.");
+            if (user == null) throw new NotFoundException("Usuario no encontrado.");
+
+            if (string.IsNullOrWhiteSpace(dto.FirstName))
+                throw new ValidationException("El nombre es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(dto.LastName))
+                throw new ValidationException("El apellido es obligatorio.");
 
             user.FirstName = dto.FirstName;
             user.LastName = dto.LastName;

@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.Enums;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
 
@@ -24,35 +25,35 @@ namespace NexusFlow.Services.Implementations
             {
                 if (request.Rating < 1 || request.Rating > 5)
                 {
-                    throw new Exception("La calificación debe estar entre 1 y 5.");
+                    throw new ValidationException("La calificación debe estar entre 1 y 5.");
                 }
 
                 if (request.Comment?.Length > 1000)
                 {
-                    throw new Exception("El comentario no puede superar los 1000 caracteres.");
+                    throw new ValidationException("El comentario no puede superar los 1000 caracteres.");
                 }
 
                 var appointment = await _appointmentRepository.GetWithDetailsByIdAsync(request.AppointmentId);
                 if (appointment is null)
                 {
-                    throw new Exception("No se encontró el turno.");
+                    throw new NotFoundException("No se encontró el turno.");
                 }
 
                 if (appointment.ClientId != userId)
                 {
-                    throw new Exception("No podés reseñar este turno.");
+                    throw new ForbiddenException("No podés reseñar este turno.");
                 }
 
                 if (appointment.Status != AppointmentStatus.Completed)
                 {
-                    throw new Exception("Solo se pueden reseñar turnos finalizados.");
+                    throw new BusinessRuleException("Solo se pueden reseñar turnos finalizados.");
                 }
 
                 var existingReview = await _reviewRepository.GetByAppointmentIdAsync(appointment.Id);
 
                 if (existingReview is not null)
                 {
-                    throw new Exception("Este turno ya tiene una reseña.");
+                    throw new ConflictException("Este turno ya tiene una reseña.");
                 }
 
                 var review = new Review

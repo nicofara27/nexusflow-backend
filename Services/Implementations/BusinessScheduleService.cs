@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.BusinessSchedule;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.BusinessSchedule;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -96,7 +97,7 @@ public class BusinessScheduleService : IBusinessScheduleService
 
         if (admin is null)
         {
-            throw new UnauthorizedAccessException(
+            throw new UnauthorizedException(
                 "El usuario no administra ningún negocio.");
         }
 
@@ -107,13 +108,13 @@ public class BusinessScheduleService : IBusinessScheduleService
     {
         if (request.Days.Count > 7)
         {
-            throw new ArgumentException(
+            throw new ValidationException(
                 "No se pueden configurar más de siete días.");
         }
 
         if (request.Days.Any(d => !Enum.IsDefined(d.DayOfWeek)))
         {
-            throw new ArgumentException(
+            throw new ValidationException(
                 "Uno de los días enviados no es válido.");
         }
 
@@ -121,13 +122,13 @@ public class BusinessScheduleService : IBusinessScheduleService
             .GroupBy(d => d.DayOfWeek)
             .Any(group => group.Count() > 1))
         {
-            throw new ArgumentException(
+            throw new ValidationException(
                 "No se puede configurar el mismo día más de una vez.");
         }
 
         if (request.Days.Any(d => d.StartTime >= d.EndTime))
         {
-            throw new ArgumentException(
+            throw new ValidationException(
                 "El horario de apertura debe ser anterior al horario de cierre.");
         }
     }

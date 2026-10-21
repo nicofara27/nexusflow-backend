@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.Service;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.Service;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -27,7 +28,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<ServiceResponse> CreateServiceAsync(ServiceRequest dto, Guid userId)
         {
             var userBusiness = await _userBusinessRepository.GetByUserIdAsync(userId, BusinessRole.Admin);
-            if (userBusiness == null) throw new Exception("No tienes permisos para crear servicios");
+            if (userBusiness == null) throw new ForbiddenException("No tienes permisos para crear servicios");
 
             await ValidateServiceCategoryAsync(dto.ServiceCategoryId, userBusiness.BusinessId);
 
@@ -57,10 +58,10 @@ namespace NexusFlow.Services.Implementations
         public async Task<ServiceResponse> GetServiceAsync(Guid serviceId, Guid userId)
         {
             var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
-            if (service == null) throw new Exception("No se encontró el servicio.");
+            if (service == null) throw new NotFoundException("No se encontró el servicio.");
 
             var isAdmin = await _userBusinessRepository.IsAdminAsync(userId, service.BusinessId);
-            if (!isAdmin) throw new Exception("No tiene permiso para modificar este servicio.");
+            if (!isAdmin) throw new ForbiddenException("No tiene permiso para modificar este servicio.");
 
             return MapToResponse(service);
         }
@@ -68,9 +69,9 @@ namespace NexusFlow.Services.Implementations
         public async Task<ServiceResponse> UpdateServiceAsync(Guid serviceId, UpdateServiceRequest dto, Guid userId)
         {
             var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
-            if (service == null) throw new Exception("No se encontró el servicio.");
+            if (service == null) throw new NotFoundException("No se encontró el servicio.");
             var isAdmin = await _userBusinessRepository.IsAdminAsync(userId, service.BusinessId);
-            if (!isAdmin) throw new Exception("No tiene permiso para modificar este servicio.");
+            if (!isAdmin) throw new ForbiddenException("No tiene permiso para modificar este servicio.");
 
             await ValidateServiceCategoryAsync(dto.ServiceCategoryId, service.BusinessId);
 
@@ -99,7 +100,7 @@ namespace NexusFlow.Services.Implementations
 
             if (category is null || category.BusinessId != businessId)
             {
-                throw new KeyNotFoundException(
+                throw new NotFoundException(
                     "La categoría de servicio no existe.");
             }
         }

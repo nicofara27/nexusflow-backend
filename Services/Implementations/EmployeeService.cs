@@ -3,6 +3,7 @@ using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
 using NexusFlow.Services.Interfaces;
 using NexusFlow.Models.DTOs.Employee;
+using NexusFlow.Exceptions;
 
 namespace NexusFlow.Services.Implementations
 {
@@ -32,11 +33,11 @@ namespace NexusFlow.Services.Implementations
         {
             var adminUserBusiness = await _userBusinessRepository.GetByUserIdAsync(adminId, BusinessRole.Admin);
             if (adminUserBusiness == null)
-                throw new Exception("No tenés permiso para modificar horarios.");
+                throw new ForbiddenException("No tenés permiso para modificar horarios.");
 
             var employee = await _userBusinessRepository.GetEmployeeByIdAsync(userBusinessId);
             if (employee == null || employee.BusinessId != adminUserBusiness.BusinessId)
-                throw new Exception("Empleado no encontrado.");
+                throw new NotFoundException("Empleado no encontrado.");
 
 
             var existingSchedules = await _employeeRepository.GetScheduleByUserBusinessIdAsync(userBusinessId);
@@ -101,10 +102,10 @@ namespace NexusFlow.Services.Implementations
         public async Task<GetEmployeeResponse> GetEmployeeAsync(Guid userBusinessId, Guid requesterId)
         {
             var userBusiness = await _userBusinessRepository.GetEmployeeByIdWithDetailsAsync(userBusinessId);
-            if (userBusiness == null) throw new Exception("No se encontro el empleado.");
+            if (userBusiness == null) throw new NotFoundException("No se encontro el empleado.");
 
             var isAllowed = await _userBusinessRepository.IsAdminOrEmployeeAsync(requesterId, userBusiness.BusinessId);
-            if (!isAllowed) throw new Exception("No tienes los permisos necesarios.");
+            if (!isAllowed) throw new ForbiddenException("No tienes los permisos necesarios.");
 
             return new GetEmployeeResponse
             {
@@ -123,7 +124,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<List<GetEmployeeResponse>> GetEmployeesByBusinessIdAsync(Guid requesterId)
         {
             var requester = await _userBusinessRepository.GetByUserIdAsync(requesterId, BusinessRole.Admin);
-            if (requester == null) throw new Exception("No tienes los permisos necesarios.");
+            if (requester == null) throw new ForbiddenException("No tienes los permisos necesarios.");
 
             var employees = await _userBusinessRepository.GetEmployeesByBusinessIdAsync(requester.BusinessId);
 
@@ -144,7 +145,7 @@ namespace NexusFlow.Services.Implementations
         public async Task<List<EmployeeSummaryResponse>> GetEmployeesByServiceIdAsync(Guid serviceId)
         {
             var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
-            if (service == null) throw new Exception("Servicio no encontrado.");
+            if (service == null) throw new NotFoundException("Servicio no encontrado.");
 
             var employees = await _userBusinessRepository.GetEmployeesByServiceIdAsync(serviceId, service.BusinessId);
 
@@ -159,16 +160,16 @@ namespace NexusFlow.Services.Implementations
         public async Task<UpdateEmployeeResponse> UpdateEmployeeAsync(Guid userBusinessId, Guid requesterId, UpdateEmployeeRequest dto)
         {
             var userBusiness = await _userBusinessRepository.GetEmployeeByIdWithDetailsAsync(userBusinessId);
-            if (userBusiness == null) throw new Exception("Usuario no encontrado.");
+            if (userBusiness == null) throw new NotFoundException("Usuario no encontrado.");
 
             var isAllowed = await _userBusinessRepository.IsAdminOrEmployeeAsync(requesterId, userBusiness.BusinessId);
-            if (!isAllowed) throw new Exception("No tienes los permisos necesarios.");
+            if (!isAllowed) throw new ForbiddenException("No tienes los permisos necesarios.");
 
             var services = await _serviceRepository.GetByIdsAsync(dto.ServiceIds);
-            if (services.Count != dto.ServiceIds.Count) throw new Exception("Uno o más servicios no fueron encontrados.");
+            if (services.Count != dto.ServiceIds.Count) throw new NotFoundException("Uno o más servicios no fueron encontrados.");
 
             var invalidServices = services.Where(s => s.BusinessId != userBusiness.BusinessId).ToList();
-            if (invalidServices.Any()) throw new Exception("Uno o más servicios no pertenecen a este negocio.");
+            if (invalidServices.Any()) throw new ForbiddenException("Uno o más servicios no pertenecen a este negocio.");
 
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {

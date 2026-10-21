@@ -1,4 +1,5 @@
-﻿using NexusFlow.Models.DTOs.ServiceCategory;
+﻿using NexusFlow.Exceptions;
+using NexusFlow.Models.DTOs.ServiceCategory;
 using NexusFlow.Models.Entities;
 using NexusFlow.Models.Enums;
 using NexusFlow.Repositories.Interfaces;
@@ -39,13 +40,13 @@ namespace NexusFlow.Services.Implementations
 
             if(string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception("El nombre de la categoría es obligatorio.");
+                throw new ValidationException("El nombre de la categoría es obligatorio.");
             }
 
             var exists = await _serviceCategoryRepository.ExistsByNameAsync(admin.BusinessId, name);
             if(exists)
             {
-                throw new Exception("Ya existe una categoría con ese nombre.");
+                throw new ConflictException("Ya existe una categoría con ese nombre.");
             }
 
             var category = new ServiceCategory
@@ -66,21 +67,19 @@ namespace NexusFlow.Services.Implementations
             var admin = await GetAdminAsync(adminId);
 
             var category = await _serviceCategoryRepository.GetByIdAsync(categoryId);
-            if (category == null || category.BusinessId != admin.BusinessId)
-            {
-                throw new Exception("La categoría de servicio no existe.");
-            }
+            if (category is null) throw new NotFoundException("Categoría no encontrada.");
+            if (category.BusinessId != admin.BusinessId) throw new ForbiddenException("No tenés permiso para acceder a esta categoría.");
 
             var name = dto.Name.Trim();
             if(string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception("El nombre de la categoría es obligatorio.");
+                throw new ValidationException("El nombre de la categoría es obligatorio.");
             }
 
             var exists = await _serviceCategoryRepository.ExistsByNameAsync(admin.BusinessId, name, categoryId);
             if(exists)
             {
-                throw new Exception("Ya existe una categoría con ese nombre.");
+                throw new ConflictException("Ya existe una categoría con ese nombre.");
             }
 
             category.Name = name;
@@ -100,7 +99,7 @@ namespace NexusFlow.Services.Implementations
 
             if (category is null || category.BusinessId != admin.BusinessId)
             {
-                throw new KeyNotFoundException(
+                throw new NotFoundException(
                     "La categoría de servicio no existe.");
             }
 
@@ -115,7 +114,7 @@ namespace NexusFlow.Services.Implementations
 
             if (admin is null)
             {
-                throw new Exception("El usuario no administra ningún negocio.");
+                throw new ForbiddenException("El usuario no administra ningún negocio.");
             }
 
             return admin;

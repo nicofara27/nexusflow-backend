@@ -15,17 +15,23 @@ public sealed class GlobalExceptionHandler(
     {
         var (statusCode, title) = exception switch
         {
-            NotFoundException =>
-                (StatusCodes.Status404NotFound, "Recurso no encontrado"),
+            BusinessRuleException =>
+                (StatusCodes.Status400BadRequest, "Solicitud inválida"),
+
+            ValidationException =>
+                (StatusCodes.Status400BadRequest, "Datos inválidos"),
+
+            UnauthorizedException =>
+                (StatusCodes.Status401Unauthorized, "No autorizado"),
 
             ForbiddenException =>
                 (StatusCodes.Status403Forbidden, "Acceso denegado"),
 
+            NotFoundException =>
+                (StatusCodes.Status404NotFound, "Recurso no encontrado"),
+
             ConflictException =>
                 (StatusCodes.Status409Conflict, "Conflicto"),
-
-            BusinessRuleException =>
-                (StatusCodes.Status400BadRequest, "Solicitud inválida"),
 
             _ =>
                 (StatusCodes.Status500InternalServerError, "Error interno")
