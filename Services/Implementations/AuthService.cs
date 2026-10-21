@@ -107,7 +107,7 @@ namespace NexusFlow.Services.Implementations
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
             var exists = await _userRepository.ExistsByEmailAsync(normalizedEmail);
 
-            if (exists) throw new ConflictException("El email ya esta registrado.") 
+            if (exists) throw new ConflictException("El email ya esta registrado.");
 
             var passwordHash = _passwordService.hashPassword(dto.Password);
 
