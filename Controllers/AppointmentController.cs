@@ -72,16 +72,29 @@ namespace NexusFlow.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetAppointments([FromQuery] Guid? employeeId)
+        [HttpGet("managed")]
+        public async Task<IActionResult> GetManagedAppointments([FromQuery] Guid? employeeId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null) return Unauthorized("Token invalido.");
 
             var userId = Guid.Parse(userIdClaim);
 
-            var appointments = await _appointmentService.GetAppointmentsAsync(userId, employeeId);
+            var appointments = await _appointmentService.GetManagedAppointmentsAsync(userId, employeeId);
 
+            return Ok(appointments);
+        }
+
+        [Authorize]
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyAppointments()
+        {
+            var userClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userClaim == null) return Unauthorized("Token inválido.");
+
+            var userId = Guid.Parse(userClaim);
+
+            var appointments = await _appointmentService.GetClientAppointmentsAsync(userId);
             return Ok(appointments);
         }
 

@@ -213,28 +213,49 @@ namespace NexusFlow.Services.Implementations
             return AppointmentMapper.ToResponse(appointment);
         }
 
-        public async Task<List<AppointmentResponse>> GetAppointmentsAsync(Guid userId, Guid? employeeId = null)
+        public async Task<List<AppointmentResponse>> GetManagedAppointmentsAsync(
+            Guid userId,
+            Guid? employeeId = null)
         {
             var userBusiness = await _userBusinessRepository.GetByUserIdAsync(userId);
 
+            if (userBusiness == null)
+            {
+                throw new ForbiddenException(
+                    "No tenés acceso a la gestión de turnos.");
+            }
+
             List<Appointment> appointments;
 
-            if (userBusiness != null && userBusiness.Role == BusinessRole.Admin)
+            if (userBusiness.Role == BusinessRole.Admin)
             {
                 appointments = employeeId.HasValue
-                    ? await _appointmentRepository.GetByBusinessAndEmployeeIdAsync(userBusiness.BusinessId, employeeId.Value)
-                    : await _appointmentRepository.GetByBusinessIdAsync(userBusiness.BusinessId);
+                    ? await _appointmentRepository.GetByBusinessAndEmployeeIdAsync(
+                        userBusiness.BusinessId,
+                        employeeId.Value)
+                    : await _appointmentRepository.GetByBusinessIdAsync(
+                        userBusiness.BusinessId);
             }
-            else if (userBusiness != null && userBusiness.Role == BusinessRole.Employee)
+            else if (userBusiness.Role == BusinessRole.Employee)
             {
-                appointments = await _appointmentRepository.GetByEmployeeIdAsync(userBusiness.Id);
+                appointments = await _appointmentRepository.GetByEmployeeIdAsync(
+                    userBusiness.Id);
             }
             else
             {
-                appointments = await _appointmentRepository.GetByClientIdAsync(userId);
+                throw new ForbiddenException(
+                    "No tenés acceso a la gestión de turnos.");
             }
 
-            return appointments.Select(AppointmentMapper.ToResponse).ToList();
+            return appointments
+                .Select(AppointmentMapper.ToResponse)
+                .ToList();
+        }
+
+        public async Task<List<ClientAppointmentResponse>> GetClientAppointmentsAsync(Guid clientId)
+        {
+            var appointments = await _appointmentRepository.GetByClientIdAsync(clientId);
+            return appointments.Select(AppointmentMapper.ToClientResponse).ToList();
         }
 
         public async Task<List<AvailableTimeResponse>> GetEmployeeAvailabilityAsync(Guid userBusinessId, Guid serviceId, DateOnly date)

@@ -37,28 +37,37 @@ namespace NexusFlow.Repositories.Implementations
         public async Task<List<Appointment>> GetByClientIdAsync(Guid clientId)
         {
             return await GetBaseQuery()
+                .Include(a => a.Business)
+                .AsNoTracking()
                 .Where(a => a.ClientId == clientId)
+                .OrderBy(a => a.StartDate)
                 .ToListAsync();
         }
 
         public async Task<List<Appointment>> GetByEmployeeIdAsync(Guid employeeId)
         {
             return await GetBaseQuery()
+                .AsNoTracking()
                 .Where(a => a.EmployeeId == employeeId)
+                .OrderBy(a => a.StartDate)
                 .ToListAsync();
         }
 
         public async Task<List<Appointment>> GetByBusinessIdAsync(Guid businessId)
         {
             return await GetBaseQuery()
+                .AsNoTracking()
                 .Where(a => a.BusinessId == businessId)
+                .OrderBy(a => a.StartDate)
                 .ToListAsync();
         }
 
         public async Task<List<Appointment>> GetByBusinessAndEmployeeIdAsync(Guid businessId, Guid employeeId)
         {
             return await GetBaseQuery()
+                .AsNoTracking()
                 .Where(a => a.BusinessId == businessId && a.EmployeeId == employeeId)
+                .OrderBy(a => a.StartDate)
                 .ToListAsync();
         }
 
