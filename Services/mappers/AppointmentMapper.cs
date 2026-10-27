@@ -31,6 +31,7 @@ public static class AppointmentMapper
             Id = appointment.Id,
             BusinessId = appointment.BusinessId,
             BusinessName = appointment.Business.Name,
+            BusinessAddress = appointment.Business.Address,
             ServiceName = appointment.Service.Name,
             EmployeeName = $"{appointment.Employee.User.FirstName} {appointment.Employee.User.LastName}",
             StartDate = appointment.StartDate,

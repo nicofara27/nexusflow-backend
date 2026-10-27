@@ -14,7 +14,8 @@ public class AppointmentServiceClientAppointmentsTests : AppointmentServiceTestB
         appointment.Business = new Business
         {
             Id = _businessId,
-            Name = "Barbería Centro"
+            Name = "Barbería Centro",
+            Address = "Calle 123"
         };
 
         var appointments = new List<Appointment>
@@ -35,6 +36,7 @@ public class AppointmentServiceClientAppointmentsTests : AppointmentServiceTestB
         Assert.Equal(appointment.Id, response.Id);
         Assert.Equal(_businessId, response.BusinessId);
         Assert.Equal("Barbería Centro", response.BusinessName);
+        Assert.Equal("Calle 123", response.BusinessAddress);
         Assert.Equal("Corte", response.ServiceName);
         Assert.Equal("Juan Pérez", response.EmployeeName);
         Assert.Equal(appointment.StartDate, response.StartDate);
