@@ -8,7 +8,7 @@ namespace NexusFlow.Services.Interfaces
         Task<AppointmentResponse> ConfirmAppointmentAsync(string token);
         Task<AppointmentResponse> CancelAppointmentAsync(Guid userId, Guid appointmentId);
         Task<AppointmentResponse> CompleteAppointmentAsync(Guid userId, Guid appointmentId);
-        Task<List<AppointmentResponse>> GetManagedAppointmentsAsync(Guid userId, Guid? employeeId = null);
+        Task<List<ManagedAppointmentResponse>> GetManagedAppointmentsAsync(Guid userId,Guid? employeeId = null);
         Task<List<ClientAppointmentResponse>> GetClientAppointmentsAsync(Guid clientId);
         Task<List<AvailableTimeResponse>> GetEmployeeAvailabilityAsync(Guid userBusinessId, Guid serviceId, DateOnly date);
     }

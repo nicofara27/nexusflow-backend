@@ -40,4 +40,19 @@ public static class AppointmentMapper
             Price = appointment.Service.Price
         };
     }
+
+    public static ManagedAppointmentResponse ToManagedResponse(Appointment appointment)
+    {
+        return new ManagedAppointmentResponse
+        {
+            Id = appointment.Id,
+            ClientName = $"{appointment.Client.FirstName} {appointment.Client.LastName}",
+            ServiceName = appointment.Service.Name,
+            EmployeeName = $"{appointment.Employee.User.FirstName} {appointment.Employee.User.LastName}",
+            StartDate = appointment.StartDate,
+            EndDate = appointment.EndDate,
+            Status = appointment.Status,
+            Price = appointment.Service.Price
+        };
+    }
 }

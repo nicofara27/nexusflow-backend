@@ -213,7 +213,7 @@ namespace NexusFlow.Services.Implementations
             return AppointmentMapper.ToResponse(appointment);
         }
 
-        public async Task<List<AppointmentResponse>> GetManagedAppointmentsAsync(
+        public async Task<List<ManagedAppointmentResponse>> GetManagedAppointmentsAsync(
             Guid userId,
             Guid? employeeId = null)
         {
@@ -248,7 +248,7 @@ namespace NexusFlow.Services.Implementations
             }
 
             return appointments
-                .Select(AppointmentMapper.ToResponse)
+                .Select(AppointmentMapper.ToManagedResponse)
                 .ToList();
         }
 

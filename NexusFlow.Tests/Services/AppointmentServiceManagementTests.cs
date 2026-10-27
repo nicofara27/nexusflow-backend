@@ -28,7 +28,14 @@ public class AppointmentServiceManagementTests : AppointmentServiceTestBase
         employee.UserId = _clientId;
         employee.Role = BusinessRole.Employee;
 
-        var appointment = CreateAppointment();
+        var appointment = CreateManagedAppointment();
+
+        appointment.Client = new User
+        {
+            Id = _clientId,
+            FirstName = "Maria",
+            LastName = "Perez"
+        };
 
         _userBusinessRepository
             .GetByUserIdAsync(_clientId)
@@ -42,6 +49,17 @@ public class AppointmentServiceManagementTests : AppointmentServiceTestBase
 
         Assert.Single(result);
 
+        var response = result[0];
+
+        Assert.Equal(appointment.Id, response.Id);
+        Assert.Equal("Maria Perez", response.ClientName);
+        Assert.Equal("Corte", response.ServiceName);
+        Assert.Equal("Juan Pérez", response.EmployeeName);
+        Assert.Equal(appointment.StartDate, response.StartDate);
+        Assert.Equal(appointment.EndDate, response.EndDate);
+        Assert.Equal(AppointmentStatus.Pending, response.Status);
+        Assert.Equal(10000, response.Price);
+
         await _appointmentRepository
             .Received(1)
             .GetByEmployeeIdAsync(employee.Id);
@@ -54,7 +72,7 @@ public class AppointmentServiceManagementTests : AppointmentServiceTestBase
         admin.UserId = _clientId;
         admin.Role = BusinessRole.Admin;
 
-        var appointment = CreateAppointment();
+        var appointment = CreateManagedAppointment();
 
         _userBusinessRepository
             .GetByUserIdAsync(_clientId)
@@ -80,7 +98,7 @@ public class AppointmentServiceManagementTests : AppointmentServiceTestBase
         admin.UserId = _clientId;
         admin.Role = BusinessRole.Admin;
 
-        var appointment = CreateAppointment();
+        var appointment = CreateManagedAppointment();
 
         _userBusinessRepository
             .GetByUserIdAsync(_clientId)
@@ -99,5 +117,20 @@ public class AppointmentServiceManagementTests : AppointmentServiceTestBase
         await _appointmentRepository
             .Received(1)
             .GetByBusinessAndEmployeeIdAsync(_businessId, _employeeId);
+    }
+
+    private Appointment CreateManagedAppointment(
+    AppointmentStatus status = AppointmentStatus.Pending)
+    {
+        var appointment = CreateAppointment(status);
+
+        appointment.Client = new User
+        {
+            Id = _clientId,
+            FirstName = "Cliente",
+            LastName = "Test"
+        };
+
+        return appointment;
     }
 }
