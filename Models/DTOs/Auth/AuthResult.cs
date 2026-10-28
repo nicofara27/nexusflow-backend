@@ -1,4 +1,6 @@
-﻿namespace NexusFlow.Models.DTOs.Auth
+﻿using NexusFlow.Models.Enums;
+
+namespace NexusFlow.Models.DTOs.Auth
 {
     public class AuthResult
     {
@@ -9,5 +11,6 @@
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public BusinessRole? BusinessRole { get; set; }
     }
 }

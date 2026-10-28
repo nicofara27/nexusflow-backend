@@ -31,7 +31,8 @@ namespace NexusFlow.Controllers
                 Token = result.Token,
                 FirstName = result.FirstName,
                 LastName = result.LastName,
-                Email = result.Email
+                Email = result.Email,
+                BusinessRole = result.BusinessRole
             });
         }
         [HttpPost("login")]
@@ -46,7 +47,8 @@ namespace NexusFlow.Controllers
                 Token = result.Token,
                 FirstName = result.FirstName,
                 LastName = result.LastName,
-                Email = result.Email
+                Email = result.Email,
+                BusinessRole = result.BusinessRole
             });
         }
 
@@ -107,7 +109,8 @@ namespace NexusFlow.Controllers
                     Token = result.Token,
                     FirstName = result.FirstName,
                     LastName = result.LastName,
-                    Email = result.Email
+                    Email = result.Email,
+                    BusinessRole = result.BusinessRole
                 });
 
             }

@@ -49,6 +49,8 @@ namespace NexusFlow.Services.Implementations
                 PasswordHash = passwordHash,
             };
 
+            var userBusiness = await _userBusinessRepository.GetByUserIdAsync(user.Id);
+
             var token = _jwtService.GenerateToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
             var refreshTokenExpiry = DateTime.UtcNow.AddDays(30);
@@ -66,7 +68,8 @@ namespace NexusFlow.Services.Implementations
                 RefreshTokenExpiry = refreshTokenExpiry,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email
+                Email = user.Email,
+                BusinessRole = userBusiness?.Role
             };
         }
 
@@ -79,6 +82,8 @@ namespace NexusFlow.Services.Implementations
 
             var isValid = _passwordService.verifyPassword(dto.Password, user.PasswordHash);
             if (!isValid) throw new UnauthorizedException("Credenciales invalidas");
+
+            var userBusiness = await _userBusinessRepository.GetByUserIdAsync(user.Id);
 
             var token = _jwtService.GenerateToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
@@ -95,7 +100,8 @@ namespace NexusFlow.Services.Implementations
                 RefreshTokenExpiry = refreshTokenExpiry,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email
+                Email = user.Email,
+                BusinessRole = userBusiness?.Role
             };
         }
 
@@ -230,6 +236,8 @@ namespace NexusFlow.Services.Implementations
                 throw new UnauthorizedException("Refresh token inválido o expirado");
             }
 
+            var userBusiness = await _userBusinessRepository.GetByUserIdAsync(user.Id);
+
             var token = _jwtService.GenerateToken(user);
             var newRefreshToken = _jwtService.GenerateRefreshToken();
             var newRefreshTokenExpiry = DateTime.UtcNow.AddDays(30);
@@ -246,7 +254,8 @@ namespace NexusFlow.Services.Implementations
                 RefreshTokenExpiry = newRefreshTokenExpiry,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email
+                Email = user.Email,
+                BusinessRole = userBusiness?.Role
             };
         }
 
