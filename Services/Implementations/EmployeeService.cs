@@ -121,24 +121,18 @@ namespace NexusFlow.Services.Implementations
             };
         }
 
-        public async Task<List<GetEmployeeResponse>> GetEmployeesByBusinessIdAsync(Guid requesterId)
+        public async Task<List<EmployeeSimpleResponse>> GetEmployeesByBusinessIdAsync(Guid requesterId)
         {
             var requester = await _userBusinessRepository.GetByUserIdAsync(requesterId, BusinessRole.Admin);
             if (requester == null) throw new ForbiddenException("No tienes los permisos necesarios.");
 
             var employees = await _userBusinessRepository.GetEmployeesByBusinessIdAsync(requester.BusinessId);
 
-            return employees.Select(e => new GetEmployeeResponse
+            return employees.Select(e => new EmployeeSimpleResponse
             {
                 Id = e.Id,
                 FirstName = e.User.FirstName,
-                LastName = e.User.LastName,
-                IsActive = e.IsActive,
-                Services = e.ServiceAssignment.Select(sa => new EmployeeServiceDTO
-                {
-                    Id = sa.Service.Id,
-                    Name = sa.Service.Name
-                }).ToList(),
+                LastName = e.User.LastName
             }).ToList();
         }
 
