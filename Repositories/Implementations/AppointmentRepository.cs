@@ -38,6 +38,7 @@ namespace NexusFlow.Repositories.Implementations
         {
             return await GetBaseQuery()
                 .Include(a => a.Business)
+                .Include(a => a.Review)
                 .AsNoTracking()
                 .Where(a => a.ClientId == clientId)
                 .OrderBy(a => a.StartDate)

@@ -43,6 +43,7 @@ public class AppointmentServiceClientAppointmentsTests : AppointmentServiceTestB
         Assert.Equal(appointment.EndDate, response.EndDate);
         Assert.Equal(AppointmentStatus.Confirmed, response.Status);
         Assert.Equal(10000, response.Price);
+        Assert.False(response.HasReview);
 
         await _appointmentRepository
             .Received(1)
@@ -63,5 +64,35 @@ public class AppointmentServiceClientAppointmentsTests : AppointmentServiceTestB
         await _appointmentRepository
             .Received(1)
             .GetByClientIdAsync(_clientId);
+    }
+
+
+    [Fact]
+    public async Task GetClientAppointmentsAsync_WhenAppointmentHasReview_ReturnsHasReviewTrue()
+    {
+        var appointment = CreateAppointment(AppointmentStatus.Completed);
+
+        appointment.Business = new Business
+        {
+            Id = _businessId,
+            Name = "Barbería Centro",
+            Address = "Calle 123"
+        };
+
+        appointment.Review = new Review
+        {
+            AppointmentId = appointment.Id,
+            BusinessId = _businessId,
+            Rating = 5
+        };
+
+        _appointmentRepository
+            .GetByClientIdAsync(_clientId)
+            .Returns(Task.FromResult(new List<Appointment> { appointment }));
+
+        var result = await _appointmentService.GetClientAppointmentsAsync(_clientId);
+
+        Assert.Single(result);
+        Assert.True(result[0].HasReview);
     }
 }

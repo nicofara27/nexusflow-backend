@@ -8,6 +8,7 @@ public class ClientAppointmentResponse
     public string BusinessAddress { get; set; } = string.Empty;
     public string ServiceName { get; set; } = string.Empty;
     public string EmployeeName { get; set; } = string.Empty;
+    public bool HasReview { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public AppointmentStatus Status { get; set; }

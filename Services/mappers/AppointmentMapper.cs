@@ -37,7 +37,8 @@ public static class AppointmentMapper
             StartDate = appointment.StartDate,
             EndDate = appointment.EndDate,
             Status = appointment.Status,
-            Price = appointment.Service.Price
+            Price = appointment.Service.Price,
+            HasReview = appointment.Review is not null
         };
     }
 
