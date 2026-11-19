@@ -87,8 +87,21 @@ namespace NexusFlow.Controllers
 
             var userId = Guid.Parse(userIdClaim);
 
-            await _authService.ChangePasswordAsync(dto, userId);
-            return NoContent();
+            var result = await _authService.ChangePasswordAsync(
+                dto,
+                userId
+            );
+
+            SetRefreshTokenCookie(result);
+
+            return Ok(new LoginResponse
+            {
+                Token = result.Token,
+                FirstName = result.FirstName,
+                LastName = result.LastName,
+                Email = result.Email,
+                BusinessRole = result.BusinessRole
+            });
         }
 
         [HttpPost("refresh")]

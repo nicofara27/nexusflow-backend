@@ -8,7 +8,7 @@ namespace NexusFlow.Services.Interfaces
         Task<AuthResult> LoginAsync(LoginRequest dto);
         Task<RegisterResponse> RegisterEmployeeAsync(RegisterRequest dto, Guid adminId);
         Task<RegisterResponse> RegisterAdminAsync(RegisterAdminRequest dto, Guid superAdminId);
-        Task ChangePasswordAsync(ChangePasswordRequest dto, Guid userId);
+        Task<AuthResult> ChangePasswordAsync(ChangePasswordRequest dto, Guid userId);
         Task<AuthResult> RefreshAsync(string refreshToken);
         Task LogoutAsync(string refreshToken);
     }

@@ -206,19 +206,70 @@ namespace NexusFlow.Services.Implementations
             return response;
         }
 
-        public async Task ChangePasswordAsync(ChangePasswordRequest dto, Guid userId)
+
+        public async Task<AuthResult>    ChangePasswordAsync(
+            ChangePasswordRequest dto,
+            Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) throw new NotFoundException("Usuario no encontrado.");
 
-                var isPasswordValid = _passwordService.verifyPassword(dto.CurrentPassword, user.PasswordHash);
-            if (!isPasswordValid) throw new UnauthorizedException("La contraseña actual es incorrecta.");
+            if (user == null)
+                throw new NotFoundException("Usuario no encontrado.");
 
-            user.PasswordHash = _passwordService.hashPassword(dto.NewPassword); 
+            if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+                throw new ValidationException(
+                    "La contraseña actual es obligatoria.");
+
+            if (string.IsNullOrWhiteSpace(dto.NewPassword) ||
+                dto.NewPassword.Length < 8)
+            {
+                throw new ValidationException(
+                    "La nueva contraseña debe tener al menos 8 caracteres.");
+            }
+
+            var isCurrentPasswordValid = _passwordService.verifyPassword(
+                dto.CurrentPassword,
+                user.PasswordHash
+            );
+
+            if (!isCurrentPasswordValid)
+                throw new ValidationException(
+                    "La contraseña actual es incorrecta.");
+
+            if (dto.CurrentPassword == dto.NewPassword)
+                throw new ValidationException(
+                    "La nueva contraseña debe ser diferente a la actual.");
+
+
+            user.PasswordHash = _passwordService.hashPassword(
+                dto.NewPassword
+            );
+
+            var userBusiness = await _userBusinessRepository
+                .GetByUserIdAsync(user.Id);
+
+            var token = _jwtService.GenerateToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+            var refreshTokenExpiry = DateTime.UtcNow.AddDays(30);
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = refreshTokenExpiry;
 
             _userRepository.Update(user);
             await _unitOfWork.SaveChangesAsync();
-        }   
+
+            return new AuthResult
+            {
+                Token = token,
+                RefreshToken = refreshToken,
+                RefreshTokenExpiry = refreshTokenExpiry,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                BusinessRole = userBusiness?.Role
+            };
+        }
+
 
         public async Task<AuthResult> RefreshAsync(string refreshToken)
         {
